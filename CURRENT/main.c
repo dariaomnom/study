@@ -30,7 +30,7 @@ void print_info(){
 //    "\n\033[4;31mВыберите команду:\033[0m\n"
 //    "\n\033[1;31mВыберите команду:\033[0m\n"
     printf("Это программа с CLI для редактирования png-изображений <з\n");
-    printf("Поддерживаются файлы с глубиной цвета RGBa\n");
+    printf("Поддерживаются файлы с глубиной цвета RGBa 8 бит\n");
     printf("Формат ввода: ./pngedit [filename.png] -[o]/--[option] [arguments] [filename.png]\n");
 
 
@@ -38,15 +38,16 @@ void print_info(){
     printf("    [x-координата] [y-координата] - левый верхний угол\n");
     printf("    [число] - длина стороны\n");
     printf("    [число] - толщина линий (в пикселях)\n");
-    printf("    [R] [G] [B] [A] - числа, цвет заливки и линий\n");
+    printf("    [R] [G] [B] [A] - числа от 0 до 255, цвет линий\n");
     printf("    [число] - заливка (по умолчанию без заливки) (1 - заливка, 0 - нет)\n");
+    printf("    [R] [G] [B] [A] - числа от 0 до 255, цвет заливки\n");
 
     printf("[имя файла] -w/--swap - поменять местами 4 куска области\n");
     printf("    [x-координата] [y-координата] - левый верхний угол\n");
     printf("    [x-координата] [y-координата] - правый нижний угол\n");
     printf("    [число] - способ (1 - по кругу, 2 - по диагонали)\n");
 
-    printf("[имя файла] -f/--frequent - заменить самый часто встречающийся цвет на новый\n");
+    printf("[имя файла] -o/--often - заменить самый часто встречающийся цвет на новый\n");
     printf("    [R] [G] [B] [A] - числа, новый цвет (RGBa)\n");
 
     printf("[имя файла] -n/--inversion - инвертировать цвет в заданной области\n");
@@ -204,44 +205,67 @@ void process_file(struct Png *image) {
 }
 
 //drawSquare();
-void drawSquare(struct Png *image, int x, int y, int l, int t, int * color, int fill, int * colorF) {
+void drawSquare(struct Png * image, int x, int y, int l, int t, int * color, int fill, int * colorF) {
     if (x < 0 || y < 0 || l < 0 || t < 0)  {
-        printf("Недопустимые параметры:\n "
-               "координаты, размер квадрата и ширина контура не могут "
-               "иметь отрицательные значения\n");
+        printf("Введены некорретные данные: \n "
+               "координаты, длина стороны квадрата и ширина линий "
+               "не могут иметь отрицательные значения\n");
         return;
     }
-    if (x > image->width || y > image->height) {
-        printf("Недопустимые параметры:\n "
-               "координаты не могут лежать за пределами изображения\n");
+    if (x < 0 ||  x >= image->width || y < 0 || y >= image->height) {
+        printf("Введены некорретные данные: координаты должны "
+               "находиться в пределах изображения и быть не меньше 0\n");
         return;
     }
     if ((x + l) >= image->width || (y + l) >= image->height) {
-        printf("Квадрат не может заходить за пределы изображения\n");
+        printf("Введены некорретные данные: квадрат не может "
+               "выходить за пределы изображения\n");
         return;
     }
-    if (color[0] > 255 || color[0] < 0 || color[1] > 255 || color[1] < 0 || color[2] > 255 || color[2] < 0 || color[3] > 255 || color[3] < 0) {
-        printf("Некорректно заданные диапазоны.\n");
+    if (color[0] > 255 || color[0] < 0 || color[1] > 255 || color[1] < 0
+    || color[2] > 255 || color[2] < 0 || color[3] > 255 || color[3] < 0) {
+        printf("Введены некорретные данные: цвета должны лежать от 0 до 255\n");
         return;
     }
-//    if (x < 0 || y < 0 || x + l > image->width || y + l > image->height) {
-//        // Квадрат не влезает в изображение, ничего не делаем
-//        return;
-//    }
     // Вычисляем координаты углов квадрата
     int x1 = x;
     int y1 = y;
     int x2 = x + l - 1;
     int y2 = y + l - 1;
 
+    int number_of_channels = 4;
+    int bit_depth = image->bit_depth;
+    int stride = number_of_channels * bit_depth / 8;
+//
+//    uint16_t * new_color = (uint16_t *) colorF;
+//    if (fill) {
+//        for (int i = x1 + 1; i <= x2 - 1; i++) {
+//            for (int j = y1 + 1; j <= y2 - 1; j++) {
+//                unsigned char * Icolor = image->row_pointers[i];
+//                if (bit_depth == 8) {
+//                    Icolor[j * stride + 0] = (uint8_t) new_color[0];
+//                    Icolor[j * stride + 1] = (uint8_t) new_color[1];
+//                    Icolor[j * stride + 2] = (uint8_t) new_color[2];
+//                    Icolor[j * stride + 3] = (uint8_t) new_color[3];
+//                } else if (bit_depth == 16) {
+//                    ((uint16_t *) Icolor)[j * stride + 0] = new_color[0];
+//                    ((uint16_t *) Icolor)[j * stride + 1] = new_color[1];
+//                    ((uint16_t *) Icolor)[j * stride + 2] = new_color[2];
+//                    ((uint16_t *) Icolor)[j * stride + 3] = new_color[3];
+//                }
+//            }
+//        }
+//    }
+
+
     if (fill) {
     // Заливаем квадрат выбранным цветом
         for (int i = x1 + 1; i <= x2 - 1; i++) {
             for (int j = y1 + 1; j <= y2 - 1; j++) {
-                image->row_pointers[i][j * 4 + 0] = colorF[0];
-                image->row_pointers[i][j * 4 + 1] = colorF[1];
-                image->row_pointers[i][j * 4 + 2] = colorF[2];
-                image->row_pointers[i][j * 4 + 3] = colorF[3];
+                image->row_pointers[i][j * stride + 0] = colorF[0];
+                image->row_pointers[i][j * stride + 1] = colorF[1];
+                image->row_pointers[i][j * stride + 2] = colorF[2];
+                image->row_pointers[i][j * stride + 3] = colorF[3];
             }
         }
     }
@@ -251,10 +275,10 @@ void drawSquare(struct Png *image, int x, int y, int l, int t, int * color, int 
             if ((j >= y1 && j <= y1+t) || (j <= y2 && j >= y2-t)
             || (i >= x1 && i <= x1+t)  || (i <= x2 && i >= x2-t)) {
 
-                image->row_pointers[i][j * 4 + 0] = color[0];
-                image->row_pointers[i][j * 4 + 1] = color[1];
-                image->row_pointers[i][j * 4 + 2] = color[2];
-                image->row_pointers[i][j * 4 + 3] = color[3];
+                image->row_pointers[i][j * stride + 0] = color[0];
+                image->row_pointers[i][j * stride + 1] = color[1];
+                image->row_pointers[i][j * stride + 2] = color[2];
+                image->row_pointers[i][j * stride + 3] = color[3];
             }
         }
     }
@@ -265,14 +289,33 @@ void drawSquare(struct Png *image, int x, int y, int l, int t, int * color, int 
 //swapAreas();
 //changeColor();
 //invertColors();
+void invertColors(struct Png * image, int x1, int y1, int x2, int y2) {
+    if (x1 < 0 ||  x1 >= image->width || y1 < 0 || y1 >= image->height
+    || x2 < 0 ||  x2 >= image->width || y2 < 0 || y2 >= image->height) {
+        printf("Введены некорретные данные: координаты должны "
+               "находиться в пределах изображения и быть не меньше нуля\n");
+        return;
+    }
+    if (x1 > x2 || y1 > y2) {
+        printf("Введены некорретные данные: координаты верхнего левого угла "
+               "должны быть меньше координат нижнего правого угла.\n");
+        return;
+    }
+    int number_of_channels = 4;
+    int bit_depth = image->bit_depth;
+    int stride = number_of_channels * bit_depth / 8;
+    for (int i = x1; i <= x2; i++) {
+        for (int j = y1; j <= y2; j++) {
+            image->row_pointers[i][j * stride + 0] = 255 - image->row_pointers[i][j * stride + 0];
+            image->row_pointers[i][j * stride + 1] = 255 - image->row_pointers[i][j * stride + 1];
+            image->row_pointers[i][j * stride + 2] = 255 - image->row_pointers[i][j * stride + 2];
+            image->row_pointers[i][j * stride + 3] = image->row_pointers[i][j * stride + 3];
+        }
+    }
+}
 
 int main(int argc, char **argv) {
-//    if (argc != 3){
-//        fprintf(stderr,"Usage: program_name <file_in> <file_out>\n");
-//        return 0;
-//    }
     struct Png image;
-
     char* output = argv[1];
     read_png_file(argv[1], &image);
 //    process_file(&image);
@@ -283,16 +326,6 @@ int main(int argc, char **argv) {
             {"swap", required_argument, NULL, 'w'},
             {"often", required_argument, NULL, 'o'},
             {"inversion", required_argument, NULL, 'n'},
-//
-    //            {"start", required_argument, NULL, 's'},
-    //            {"end", required_argument, NULL, 'e'},
-    //            {"length", required_argument, NULL, 'l'},
-    //            {"thickness", required_argument, NULL, 't'},
-    //            {"color", required_argument, NULL, 'c'},
-    //            {"fill", required_argument, NULL, 'f'},
-    //            {"round", no_argument, NULL, 'r'},
-    //            {"diagonal", no_argument, NULL, 'd'},
-//
             {"info", no_argument, NULL, 'i'},
             {"help", no_argument, NULL, 'h'},
             {NULL, 0, NULL, 0},
@@ -303,98 +336,62 @@ int main(int argc, char **argv) {
     char *opts = "q:w:o:n:ih";
     opt = getopt_long(argc, argv, opts, longOpts, &longIndex);
 
-//
-//    switch (opt) {
-//        case 'q':
-//            while ((opt = getopt_long(argc, argv, opts, longOpts, &longIndex)) != -1) {
-//                switch (opt) {
-//                    case
-//                }
-//            }
-//            drawSquare();
-//            write_png_file();
-//            break;
-//        case 'w':
-//
-//            swapAreas();
-//            write_png_file();
-//            break;
-//        case 'f':
-//            changeColor();
-//            write_png_file();
-//            break;
-//        case 'n':
-//            invertColors();
-//            write_png_file();
-//            break;
-//        case 'i':
-//            print_PNG_info();
-//            break;
-//        case 'h':
-//            print_info();
-//            break;
-//    }
-
     int y, x, length, thickness, fill;
+    int x1, y1, x2, y2;
     int color[4];
     int color_fill[4];
 
-        while (opt != -1) {
-            switch (opt) {
-                case 'q':
-                    x = atoi(argv[3]);
-                    y = atoi(argv[4]);
-                    length = atoi(argv[5]);
-                    thickness = atoi(argv[6]);
-                    color[0] = atoi(argv[7]);
-                    color[1] = atoi(argv[8]);
-                    color[2] = atoi(argv[9]);
-                    color[3] = atoi(argv[10]);
-                    fill = atoi(argv[11]);
-                    if (fill) {
-                        color_fill[0] = atoi(argv[12]);
-                        color_fill[1] = atoi(argv[13]);
-                        color_fill[2] = atoi(argv[14]);
-                        color_fill[3] = atoi(argv[15]);
-                        drawSquare(&image, x, y, length, thickness, color, fill, color_fill);
-                        write_png_file(argv[16], &image);
-                    } else {
-                        drawSquare(&image, x, y, length, thickness, color, fill, NULL);
-                        write_png_file(argv[12], &image);
-                    }
+    while (opt != -1) {
+        switch (opt) {
+            case 'q':
+                x = atoi(argv[3]);
+                y = atoi(argv[4]);
+                length = atoi(argv[5]);
+                thickness = atoi(argv[6]);
+                color[0] = atoi(argv[7]);
+                color[1] = atoi(argv[8]);
+                color[2] = atoi(argv[9]);
+                color[3] = atoi(argv[10]);
+                fill = atoi(argv[11]);
+                if (fill) {
+                    color_fill[0] = atoi(argv[12]);
+                    color_fill[1] = atoi(argv[13]);
+                    color_fill[2] = atoi(argv[14]);
+                    color_fill[3] = atoi(argv[15]);
+                    drawSquare(&image, x, y, length, thickness, color, fill, color_fill);
+                    write_png_file(argv[16], &image);
+                } else {
+                    drawSquare(&image, x, y, length, thickness, color, fill, NULL);
+                    write_png_file(argv[12], &image);
+                }
 
-//                    color = {atoi(argv[7]), atoi(argv[8]), atoi(argv[9]), atoi(argv[10])};
-//                    fill = atoi(argv[11]);
-//                    if (fill) {
-//
-//                    }
-//                    drawSquare(&image, x, y, length, thickness, color, fill, color_fill);
-//                    drawSquare(&image, x, y, length, thickness, color[0], color[1], color[2], color[3], fill, color[0], color[1], color[2], color[3]);
-//                    write_png_file(argv[16], &image);
-//                    printf("%d %d %d %d %d %d %d %d %d\n", x, y, length, thickness, color[0], color[1], color[2], color[3], fill);
-//                    printf("%d\n", atoi(argv[3]));
-                    break;
-                case 'w':
+                break;
+            case 'w':
 //                    swapAreas();
 //                    write_png_file();
-                    break;
-                case 'o':
+                break;
+            case 'o':
 //                    changeColor();
 //                    write_png_file();
-                    break;
-                case 'n':
-//                    invertColors();
+                break;
+            case 'n':
+                x1 = atoi(argv[3]);
+                y1 = atoi(argv[4]);
+                x2 = atoi(argv[5]);
+                y2 = atoi(argv[6]);
+                invertColors(&image, x1, y1, x2, y2);
+                write_png_file(argv[7], &image);
 //                    write_png_file();
-                    break;
-                case 'i':
-//                    print_PNG_info();
-                    break;
-                case 'h':
-                    print_info();
-                    break;
-            }
-            opt = getopt_long(argc, argv, opts, longOpts, &longIndex);
+                break;
+            case 'i':
+                print_PNG_info(&image);
+                break;
+            case 'h':
+                print_info();
+                break;
         }
+        opt = getopt_long(argc, argv, opts, longOpts, &longIndex);
+    }
 
     return 0;
 }
