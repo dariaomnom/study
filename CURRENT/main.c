@@ -236,52 +236,87 @@ void drawSquare(struct Png * image, int x, int y, int l, int t, int * color, int
     int number_of_channels = 4;
     int bit_depth = image->bit_depth;
     int stride = number_of_channels * bit_depth / 8;
-//
-//    uint16_t * new_color = (uint16_t *) colorF;
+    // от сюда жесть
+////    uint16_t * new_color = (uint16_t *) colorF;
+//    unsigned char * new_color = (unsigned char *) colorF;
+//    unsigned char * new_color1 = (unsigned char *) color;
 //    if (fill) {
-//        for (int i = x1 + 1; i <= x2 - 1; i++) {
-//            for (int j = y1 + 1; j <= y2 - 1; j++) {
-//                unsigned char * Icolor = image->row_pointers[i];
+//        for (int i = x1; i <= x2; i++) {
+//            for (int j = y1; j <= y2; j++) {
+//                unsigned char * Icolor = image->row_pointers[j] + i * stride;
 //                if (bit_depth == 8) {
-//                    Icolor[j * stride + 0] = (uint8_t) new_color[0];
-//                    Icolor[j * stride + 1] = (uint8_t) new_color[1];
-//                    Icolor[j * stride + 2] = (uint8_t) new_color[2];
-//                    Icolor[j * stride + 3] = (uint8_t) new_color[3];
+//                    Icolor[0] = new_color[0];
+//                    Icolor[1] = new_color[1];
+//                    Icolor[2] = new_color[2];
+//                    Icolor[3] = new_color[3];
 //                } else if (bit_depth == 16) {
-//                    ((uint16_t *) Icolor)[j * stride + 0] = new_color[0];
-//                    ((uint16_t *) Icolor)[j * stride + 1] = new_color[1];
-//                    ((uint16_t *) Icolor)[j * stride + 2] = new_color[2];
-//                    ((uint16_t *) Icolor)[j * stride + 3] = new_color[3];
+////                    ((uint16_t *) Icolor)[0] = new_color[0];
+////                    ((uint16_t *) Icolor)[1] = new_color[1];
+////                    ((uint16_t *) Icolor)[2] = new_color[2];
+////                    ((uint16_t *) Icolor)[3] = new_color[3];
+//                    Icolor[0] = new_color[0];
+//                    Icolor[1] = new_color[1];
+//                    Icolor[2] = new_color[2];
+//                    Icolor[3] = new_color[3];
+//                }
+//
+//                unsigned char * Lcolor = image->row_pointers[j] + i * stride;
+//                if ((j >= y1 && j <= y1+t) || (j <= y2 && j >= y2-t)
+//                    || (i >= x1 && i <= x1+t)  || (i <= x2 && i >= x2-t)) {
+//                    if (bit_depth == 8) {
+//                        Lcolor[0] = new_color1[0];
+//                        Lcolor[1] = new_color1[1];
+//                        Lcolor[2] = new_color1[2];
+//                        Lcolor[3] = new_color1[3];
+//                    } else if (bit_depth == 16) {
+//                        Lcolor[0] = new_color1[0];
+//                        Lcolor[1] = new_color1[1];
+//                        Lcolor[2] = new_color1[2];
+//                        Lcolor[3] = new_color1[3];
+//                    }
 //                }
 //            }
 //        }
 //    }
+    // жесть заканчивается
 
+//    if (fill) {
+//    // Заливаем квадрат выбранным цветом
+//        for (int i = x1 + 1; i <= x2 - 1; i++) {
+//            for (int j = y1 + 1; j <= y2 - 1; j++) {
+//                image->row_pointers[i][j * stride + 0] = colorF[0];
+//                image->row_pointers[i][j * stride + 1] = colorF[1];
+//                image->row_pointers[i][j * stride + 2] = colorF[2];
+//                image->row_pointers[i][j * stride + 3] = colorF[3];
+//            }
+//        }
+//    }
 
-    if (fill) {
-    // Заливаем квадрат выбранным цветом
-        for (int i = x1 + 1; i <= x2 - 1; i++) {
-            for (int j = y1 + 1; j <= y2 - 1; j++) {
-                image->row_pointers[i][j * stride + 0] = colorF[0];
-                image->row_pointers[i][j * stride + 1] = colorF[1];
-                image->row_pointers[i][j * stride + 2] = colorF[2];
-                image->row_pointers[i][j * stride + 3] = colorF[3];
-            }
-        }
-    }
-
+// вернуть!
     for (int i = x1; i <= x2; i++) {
         for (int j = y1; j <= y2; j++) {
-            if ((j >= y1 && j <= y1+t) || (j <= y2 && j >= y2-t)
-            || (i >= x1 && i <= x1+t)  || (i <= x2 && i >= x2-t)) {
+//            if ((j >= y1 && j <= y1+t) || (j <= y2 && j >= y2-t)
+//            || (i >= x1 && i <= x1+t)  || (i <= x2 && i >= x2-t)) {
+//                for (int c = 0; c < 4; c++) {
+//                    image->row_pointers[j][i * stride + c] = color[c];
+//                }
+//            } else if (fill && (i >= x1+t && i <= x2-t) && (j >= y1+t && j <= y2-t)) {
+//                for (int c = 0; c < 4; c++) {
+//                    image->row_pointers[j][i * stride + c] = colorF[c];
+//                }
+//            }
 
-                image->row_pointers[i][j * stride + 0] = color[0];
-                image->row_pointers[i][j * stride + 1] = color[1];
-                image->row_pointers[i][j * stride + 2] = color[2];
-                image->row_pointers[i][j * stride + 3] = color[3];
+            for (int c = 0; c < 4; c++) {
+                if ((j >= y1 && j <= y1+t) || (j <= y2 && j >= y2-t)
+                    || (i >= x1 && i <= x1+t)  || (i <= x2 && i >= x2-t)) {
+                    image->row_pointers[j][i * stride + c] = color[c];
+                } else if (fill && (i >= x1+t && i <= x2-t) && (j >= y1+t && j <= y2-t)) {
+                    image->row_pointers[j][i * stride + c] = colorF[c];
+                }
             }
         }
     }
+// вернуть!
 
 }
 
@@ -290,6 +325,7 @@ void drawSquare(struct Png * image, int x, int y, int l, int t, int * color, int
 //changeColor();
 //invertColors();
 void invertColors(struct Png * image, int x1, int y1, int x2, int y2) {
+    printf("x1 %d y1 %d x2 %d y2 %d\n", x1, y1, x2, y2);
     if (x1 < 0 ||  x1 >= image->width || y1 < 0 || y1 >= image->height
     || x2 < 0 ||  x2 >= image->width || y2 < 0 || y2 >= image->height) {
         printf("Введены некорретные данные: координаты должны "
@@ -306,10 +342,16 @@ void invertColors(struct Png * image, int x1, int y1, int x2, int y2) {
     int stride = number_of_channels * bit_depth / 8;
     for (int i = x1; i <= x2; i++) {
         for (int j = y1; j <= y2; j++) {
-            image->row_pointers[i][j * stride + 0] = 255 - image->row_pointers[i][j * stride + 0];
-            image->row_pointers[i][j * stride + 1] = 255 - image->row_pointers[i][j * stride + 1];
-            image->row_pointers[i][j * stride + 2] = 255 - image->row_pointers[i][j * stride + 2];
-            image->row_pointers[i][j * stride + 3] = image->row_pointers[i][j * stride + 3];
+//            printf("i = %d j = %d\n", i, j);
+//            image->row_pointers[i][j * stride + 0] = 255 - image->row_pointers[i][j * stride + 0];
+//            image->row_pointers[i][j * stride + 1] = 255 - image->row_pointers[i][j * stride + 1];
+//            image->row_pointers[i][j * stride + 2] = 255 - image->row_pointers[i][j * stride + 2];
+//            image->row_pointers[i][j * stride + 3] = image->row_pointers[i][j * stride + 3];
+
+            image->row_pointers[j][i * stride + 0] = 255 - image->row_pointers[j][i * stride + 0];
+            image->row_pointers[j][i * stride + 1] = 255 - image->row_pointers[j][i * stride + 1];
+            image->row_pointers[j][i * stride + 2] = 255 - image->row_pointers[j][i * stride + 2];
+            image->row_pointers[j][i * stride + 3] = image->row_pointers[j][i * stride + 3];
         }
     }
 }
