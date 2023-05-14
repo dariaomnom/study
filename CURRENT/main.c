@@ -109,6 +109,21 @@ void read_png_file(char *file_name, struct Png *image) {
         // Some error handling: error during read_image
     }
 
+    // from GPT
+//    if (bit_depth == 16) {
+//        png_set_strip_16(png_ptr);
+//    }
+//
+//    if (color_type == PNG_COLOR_TYPE_PALETTE) {
+//        png_set_palette_to_rgb(png_ptr);
+//    }
+//
+//    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) {
+//        png_set_expand_gray_1_2_4_to_8(png_ptr);
+//    }
+    // from GPT
+
+
     image->row_pointers = (png_bytep *) malloc(sizeof(png_bytep) * image->height);
     for (y = 0; y < image->height; y++)
         image->row_pointers[y] = (png_byte *) malloc(png_get_rowbytes(image->png_ptr, image->info_ptr));
@@ -236,76 +251,9 @@ void drawSquare(struct Png * image, int x, int y, int l, int t, int * color, int
     int number_of_channels = 4;
     int bit_depth = image->bit_depth;
     int stride = number_of_channels * bit_depth / 8;
-    // от сюда жесть
-////    uint16_t * new_color = (uint16_t *) colorF;
-//    unsigned char * new_color = (unsigned char *) colorF;
-//    unsigned char * new_color1 = (unsigned char *) color;
-//    if (fill) {
-//        for (int i = x1; i <= x2; i++) {
-//            for (int j = y1; j <= y2; j++) {
-//                unsigned char * Icolor = image->row_pointers[j] + i * stride;
-//                if (bit_depth == 8) {
-//                    Icolor[0] = new_color[0];
-//                    Icolor[1] = new_color[1];
-//                    Icolor[2] = new_color[2];
-//                    Icolor[3] = new_color[3];
-//                } else if (bit_depth == 16) {
-////                    ((uint16_t *) Icolor)[0] = new_color[0];
-////                    ((uint16_t *) Icolor)[1] = new_color[1];
-////                    ((uint16_t *) Icolor)[2] = new_color[2];
-////                    ((uint16_t *) Icolor)[3] = new_color[3];
-//                    Icolor[0] = new_color[0];
-//                    Icolor[1] = new_color[1];
-//                    Icolor[2] = new_color[2];
-//                    Icolor[3] = new_color[3];
-//                }
-//
-//                unsigned char * Lcolor = image->row_pointers[j] + i * stride;
-//                if ((j >= y1 && j <= y1+t) || (j <= y2 && j >= y2-t)
-//                    || (i >= x1 && i <= x1+t)  || (i <= x2 && i >= x2-t)) {
-//                    if (bit_depth == 8) {
-//                        Lcolor[0] = new_color1[0];
-//                        Lcolor[1] = new_color1[1];
-//                        Lcolor[2] = new_color1[2];
-//                        Lcolor[3] = new_color1[3];
-//                    } else if (bit_depth == 16) {
-//                        Lcolor[0] = new_color1[0];
-//                        Lcolor[1] = new_color1[1];
-//                        Lcolor[2] = new_color1[2];
-//                        Lcolor[3] = new_color1[3];
-//                    }
-//                }
-//            }
-//        }
-//    }
-    // жесть заканчивается
 
-//    if (fill) {
-//    // Заливаем квадрат выбранным цветом
-//        for (int i = x1 + 1; i <= x2 - 1; i++) {
-//            for (int j = y1 + 1; j <= y2 - 1; j++) {
-//                image->row_pointers[i][j * stride + 0] = colorF[0];
-//                image->row_pointers[i][j * stride + 1] = colorF[1];
-//                image->row_pointers[i][j * stride + 2] = colorF[2];
-//                image->row_pointers[i][j * stride + 3] = colorF[3];
-//            }
-//        }
-//    }
-
-// вернуть!
     for (int i = x1; i <= x2; i++) {
         for (int j = y1; j <= y2; j++) {
-//            if ((j >= y1 && j <= y1+t) || (j <= y2 && j >= y2-t)
-//            || (i >= x1 && i <= x1+t)  || (i <= x2 && i >= x2-t)) {
-//                for (int c = 0; c < 4; c++) {
-//                    image->row_pointers[j][i * stride + c] = color[c];
-//                }
-//            } else if (fill && (i >= x1+t && i <= x2-t) && (j >= y1+t && j <= y2-t)) {
-//                for (int c = 0; c < 4; c++) {
-//                    image->row_pointers[j][i * stride + c] = colorF[c];
-//                }
-//            }
-
             for (int c = 0; c < 4; c++) {
                 if ((j >= y1 && j <= y1+t) || (j <= y2 && j >= y2-t)
                     || (i >= x1 && i <= x1+t)  || (i <= x2 && i >= x2-t)) {
@@ -316,16 +264,188 @@ void drawSquare(struct Png * image, int x, int y, int l, int t, int * color, int
             }
         }
     }
-// вернуть!
 
 }
 
 
 //swapAreas();
 //changeColor();
+void changeColor(struct Png * image, int * new_color) {
+////    int cnt = 0;
+////    fot (int i = 0; i < image->width; i++) {
+////        fot (int j = 0; j < image->height; j++) {
+////
+////        }
+////    }
+////    int cnt_rgba[MAX_COLOR] = {0};
+//    int size = 200;
+////    printf("%s, %d\n", __func__, __LINE__);
+//    int ** colors = calloc(size, sizeof(int*));
+//
+//    int cnt_rgba = 0;
+//    int * max_cnt = calloc(size, sizeof(int));
+//    int R = 0; int G = 0; int B = 0; int A = 0;
+////    printf("%s, %d\n", __func__, __LINE__);
+//    int number_of_channels = 4;
+//    int bit_depth = image->bit_depth;
+//    int stride = number_of_channels * bit_depth / 8;
+////    printf("%s, %d\n", __func__, __LINE__);
+//    for (int x = 0; x < image->width; x++) {
+////        png_byte* row = row_pointers[j];
+////        colors[i] = malloc(4 * sizeof(int));
+//        for (int y = 0; y < image->height; y++) {
+////            printf("X %d Y %d\n", x, y);
+////            printf("%s, %d\n", __func__, __LINE__);
+////            if (size <= cnt_rgba-1) {
+////                size += 100;
+////                colors = realloc(colors, size * sizeof(int*));
+////                max_cnt = realloc(colors, size * sizeof(int));
+////            }
+////            printf("%s, %d\n", __func__, __LINE__);
+//            R = image->row_pointers[y][x * stride + 0];
+//            G = image->row_pointers[y][x * stride + 1];
+//            B = image->row_pointers[y][x * stride + 2];
+//            A = image->row_pointers[y][x * stride + 3];
+////            printf("%s, %d\n", __func__, __LINE__);
+////            printf("%d %d %d %d\n", R,G,B,A);
+//            int flag_new = 1;
+//            for (int i = 0; i < cnt_rgba; i++) {
+//                if (cnt_rgba > size-1) {
+//                    printf("SIZE %d CNT %d i %d\n", size,cnt_rgba, i);
+//                    size += 100;
+//                    colors = realloc(colors, size * sizeof(int*));
+//                    printf("%s, %d\n", __func__, __LINE__);
+//                    max_cnt = realloc(max_cnt, size * sizeof(int));
+//                }
+////                printf("%s, %d\n", __func__, __LINE__);
+//                if (R == colors[i][0] && G == colors[i][1] && B == colors[i][2] && A == colors[i][3]) {
+////                    printf("%d %d %d %d\n", colors[i][0], colors[i][1], colors[i][2], colors[i][3]);
+//                    max_cnt[i] += 1;
+////                    printf("%s, %d\n", __func__, __LINE__);
+//                    flag_new = 0;
+//                    break;
+//                }
+//            }
+////            printf("%s, %d\n", __func__, __LINE__);
+//            if (flag_new) {
+////                printf("%s, %d\n", __func__, __LINE__);
+//                colors[cnt_rgba] = malloc(4 * sizeof(int));
+//                colors[cnt_rgba][0] = image->row_pointers[y][x * stride + 0];
+//                colors[cnt_rgba][1] = image->row_pointers[y][x * stride + 1];
+//                colors[cnt_rgba][2] = image->row_pointers[y][x * stride + 2];
+//                colors[cnt_rgba][3] = image->row_pointers[y][x * stride + 3];
+//                max_cnt[cnt_rgba] += 1;
+//                printf("%s, %d\n", __func__, __LINE__);
+//                cnt_rgba++;
+//            }
+////            printf("%s, %d\n", __func__, __LINE__);
+//        }
+//    }
+//    printf("%s, %d CNT %d\n", __func__, __LINE__, cnt_rgba);
+//    int max = 0; int number = 0;
+//    for (int i = 0; i < cnt_rgba; i++) {
+//        if (max_cnt[i] > max) {
+//            max = max_cnt[i];
+//            number = i;
+//        }
+//    }
+//    int frequent[4];
+//    for (int c = 0; c < 4; c++) {
+//        frequent[c] = colors[number][c];
+//    }
+//
+////    for (int x = 0; x < image->width; x++) {
+////        for (int y = 0; y < image->height; y++) {
+////            if
+////        }
+////    }
+//    for (int x = 0; x < image->width; x++) {
+////        png_bytep row_old = image->row_pointers[y];
+//        for (int y = 0; y < image->height; y++) {
+//            png_bytep row_old = image->row_pointers[y];
+//            png_bytep ptr_old = &(row_old[x*4]);
+//            if (ptr_old[0] == frequent[0] && ptr_old[1] == frequent[1]
+//            && ptr_old[2] == frequent[2] && ptr_old[3] == frequent[3]) {
+//                ptr_old[0] = new_color[0];
+//                ptr_old[1] = new_color[1];
+//                ptr_old[2] = new_color[2];
+//                ptr_old[3] = new_color[3];
+//            }
+//        }
+//    }
+//    for (int i = 0; i < size; i++) {
+//        free(colors[i]);
+//    }
+//    free(colors);
+//    free(max_cnt);
+
+//    printf("The most common color is #%06x, occurring %d times\n", max_color, max_count);
+
+//    int *** colors = calloc(256 * sizeof(int**));
+//    for (int i = 0; i < 256; i++) {
+//        colors[i] = calloc(256, sizeof(int*));
+//        for (int j = 0; j < 256; j++) {
+//            colors[i][j] = calloc(256, sizeof(int));
+//        }
+//    }
+    int number_of_channels = 4;
+    int bit_depth = image->bit_depth;
+    int stride = number_of_channels * bit_depth / 8;
+
+    int *** colors = calloc(256, sizeof(int**));
+    for (int i = 0; i < 256; i++) {
+        colors[i] = calloc(256, sizeof(int**));
+        for (int j = 0; j < 256; j++) {
+            colors[i][j] = calloc(256, sizeof(int*));
+        }
+    }
+
+    for (int y = 0; y < image->height; y++) {
+        png_bytep row = image->row_pointers[y];
+        for (int x = 0; x < image->width; x++) {
+            png_bytep ptr = &(row[x * stride]);
+            colors[ptr[0]][ptr[1]][ptr[2]]++;
+        }
+    }
+    int max_freq = colors[0][0][0];
+//    int max_r = 0, max_g = 0, max_b = 0;
+    int max_colors[] = {0,0,0};
+    for (int i = 0; i < 256; i++) {
+        for (int j = 0; j < 256; j++) {
+            for (int k = 0; k < 256; k++) {
+                if (colors[i][j][k] > max_freq) {
+                    max_colors[0] = i;
+                    max_colors[1] = j;
+                    max_colors[2] = k;
+                    max_freq = colors[i][j][k];
+                }
+            }
+        }
+    }
+    for (int j = 0; j < image->height; j++) {
+        png_bytep row2 = image->row_pointers[j];
+        for (int i = 0; i < image->width; i++) {
+            png_bytep ptr2 = &(row2[i * stride]);
+            if (ptr2[0] == max_colors[0] && ptr2[1] == max_colors[1] && ptr2[2] == max_colors[2]) {
+                ptr2[0] = new_color[0];
+                ptr2[1] = new_color[1];
+                ptr2[2] = new_color[2];
+                ptr2[3] = new_color[3];
+            }
+        }
+    }
+    for (int i = 0; i < 256; i++) {
+        for (int j = 0; j < 256; j++) {
+            free(colors[i][j]);
+        }
+        free(colors[i]);
+    }
+    free(colors);
+}
+
 //invertColors();
 void invertColors(struct Png * image, int x1, int y1, int x2, int y2) {
-    printf("x1 %d y1 %d x2 %d y2 %d\n", x1, y1, x2, y2);
+//    printf("x1 %d y1 %d x2 %d y2 %d\n", x1, y1, x2, y2);
     if (x1 < 0 ||  x1 >= image->width || y1 < 0 || y1 >= image->height
     || x2 < 0 ||  x2 >= image->width || y2 < 0 || y2 >= image->height) {
         printf("Введены некорретные данные: координаты должны "
@@ -342,12 +462,6 @@ void invertColors(struct Png * image, int x1, int y1, int x2, int y2) {
     int stride = number_of_channels * bit_depth / 8;
     for (int i = x1; i <= x2; i++) {
         for (int j = y1; j <= y2; j++) {
-//            printf("i = %d j = %d\n", i, j);
-//            image->row_pointers[i][j * stride + 0] = 255 - image->row_pointers[i][j * stride + 0];
-//            image->row_pointers[i][j * stride + 1] = 255 - image->row_pointers[i][j * stride + 1];
-//            image->row_pointers[i][j * stride + 2] = 255 - image->row_pointers[i][j * stride + 2];
-//            image->row_pointers[i][j * stride + 3] = image->row_pointers[i][j * stride + 3];
-
             image->row_pointers[j][i * stride + 0] = 255 - image->row_pointers[j][i * stride + 0];
             image->row_pointers[j][i * stride + 1] = 255 - image->row_pointers[j][i * stride + 1];
             image->row_pointers[j][i * stride + 2] = 255 - image->row_pointers[j][i * stride + 2];
@@ -413,7 +527,12 @@ int main(int argc, char **argv) {
 //                    write_png_file();
                 break;
             case 'o':
-//                    changeColor();
+                color[0] = atoi(argv[3]);
+                color[1] = atoi(argv[4]);
+                color[2] = atoi(argv[5]);
+                color[3] = atoi(argv[6]);
+                changeColor(&image, color);
+                write_png_file(argv[7], &image);
 //                    write_png_file();
                 break;
             case 'n':
