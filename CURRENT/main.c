@@ -71,9 +71,9 @@ void read_png_file(char *file_name, struct Png *image) {
     }
 
     fread(header, 1, 8, fp);
-    if (png_sig_cmp(header, 0, 8)){
-        // Some error handling: file is not recognized as a PNG
-    }
+//    if (png_sig_cmp(header, 0, 8)){
+//        // Some error handling: file is not recognized as a PNG
+//    }
 
     /* initialize stuff */
     image->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
@@ -102,33 +102,103 @@ void read_png_file(char *file_name, struct Png *image) {
     image->bit_depth = png_get_bit_depth(image->png_ptr, image->info_ptr);
 
     image->number_of_passes = png_set_interlace_handling(image->png_ptr);
-    png_read_update_info(image->png_ptr, image->info_ptr);
-
-    /* read file */
-    if (setjmp(png_jmpbuf(image->png_ptr))){
-        // Some error handling: error during read_image
+//    // from GPT
+    if (image->bit_depth == 16) {
+        png_set_strip_16(image->png_ptr);
     }
+//    // from GPT
+    png_read_update_info(image->png_ptr, image->info_ptr);
+//
+//    /* read file */
+//    if (setjmp(png_jmpbuf(image->png_ptr))){
+//        // Some error handling: error during read_image
+//    }
+
+//    // from GPT
+//    if (image->bit_depth == 16) {
+//        png_set_strip_16(image->png_ptr);
+//    }
+
+//    if (image->color_type == PNG_COLOR_TYPE_PALETTE) {
+//        png_set_palette_to_rgb(image->png_ptr);
+//    }
+
+//    if (image->color_type == PNG_COLOR_TYPE_GRAY && image->bit_depth < 8) {
+//        png_set_expand_gray_1_2_4_to_8(image->png_ptr);
+//    }
+
+// верное считывание пикселей
+//    image->row_pointers = (png_bytep*) malloc(sizeof(png_bytep) * image->height);
+//    for (int y = 0; y < image->height; ++y) {
+//        image->row_pointers[y] = (png_byte*) malloc(png_get_rowbytes(image->png_ptr,image->info_ptr));
+//    }
 
     // from GPT
-//    if (bit_depth == 16) {
-//        png_set_strip_16(png_ptr);
-//    }
-//
-//    if (color_type == PNG_COLOR_TYPE_PALETTE) {
-//        png_set_palette_to_rgb(png_ptr);
-//    }
-//
-//    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) {
-//        png_set_expand_gray_1_2_4_to_8(png_ptr);
-//    }
-    // from GPT
 
-
+// считывание чайки, вернуть
     image->row_pointers = (png_bytep *) malloc(sizeof(png_bytep) * image->height);
     for (y = 0; y < image->height; y++)
         image->row_pointers[y] = (png_byte *) malloc(png_get_rowbytes(image->png_ptr, image->info_ptr));
 
     png_read_image(image->png_ptr, image->row_pointers);
+
+//// from GPT
+//    int x,y;
+//    char header[8];    // 8 is the maximum size that can be checked
+//    /* open file and test for it being a png */
+////    FILE *fp = fopen(file_name, "rb");
+////    if (!fp){
+////        // Some error handling: file could not be opened
+////    }
+////    fread(header, 1, 8, fp);
+////    if (png_sig_cmp(header, 0, 8)){
+////        // Some error handling: file is not recognized as a PNG
+////    }
+//    image->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+//    image->info_ptr = png_create_info_struct(image->png_ptr);
+//
+//    FILE *fp = fopen(file_name, "rb");
+//    png_init_io(image->png_ptr, fp);
+//    png_read_info(image->png_ptr, image->info_ptr);
+//
+//    image->width = png_get_image_width(image->png_ptr, image->info_ptr);
+//    image->height = png_get_image_height(image->png_ptr, image->info_ptr);
+//    image->color_type = png_get_color_type(image->png_ptr, image->info_ptr);
+//    image->bit_depth = png_get_bit_depth(image->png_ptr, image->info_ptr);
+//
+//    if (image->bit_depth == 16) {
+//        png_set_strip_16(image->png_ptr);
+//    }
+//
+////    if (image->color_type == PNG_COLOR_TYPE_PALETTE) {
+////        png_set_palette_to_rgb(image->png_ptr);
+////    }
+//
+////    if (image->color_type == PNG_COLOR_TYPE_GRAY && image->bit_depth < 8) {
+////        png_set_expand_gray_1_2_4_to_8(image->png_ptr);
+////    }
+//
+////    if (png_get_valid(image->png_ptr, image->info_ptr, PNG_INFO_tRNS)) {
+////        png_set_tRNS_to_alpha(image->png_ptr);
+////    }
+//
+////    if (image->color_type == PNG_COLOR_TYPE_RGB || image->color_type == PNG_COLOR_TYPE_GRAY || image->color_type == PNG_COLOR_TYPE_PALETTE) {
+////        png_set_filler(image->png_ptr, 0xFF, PNG_FILLER_AFTER);
+////    }
+//
+////    if (image->color_type == PNG_COLOR_TYPE_GRAY || image->color_type == PNG_COLOR_TYPE_GRAY_ALPHA) {
+////        png_set_gray_to_rgb(image->png_ptr);
+////    }
+//
+//    png_read_update_info(image->png_ptr, image->info_ptr);
+//
+//    png_bytep* row_pointers = (png_bytep*) malloc(sizeof(png_bytep) * image->height);
+//    for (int y = 0; y < image->height; ++y) {
+//        row_pointers[y] = (png_byte*) malloc(png_get_rowbytes(image->png_ptr,image->info_ptr));
+//    }
+//    png_read_image(image->png_ptr, row_pointers);
+
+// from GPT
 
     fclose(fp);
 }
@@ -271,123 +341,7 @@ void drawSquare(struct Png * image, int x, int y, int l, int t, int * color, int
 //swapAreas();
 //changeColor();
 void changeColor(struct Png * image, int * new_color) {
-////    int cnt = 0;
-////    fot (int i = 0; i < image->width; i++) {
-////        fot (int j = 0; j < image->height; j++) {
-////
-////        }
-////    }
-////    int cnt_rgba[MAX_COLOR] = {0};
-//    int size = 200;
-////    printf("%s, %d\n", __func__, __LINE__);
-//    int ** colors = calloc(size, sizeof(int*));
-//
-//    int cnt_rgba = 0;
-//    int * max_cnt = calloc(size, sizeof(int));
-//    int R = 0; int G = 0; int B = 0; int A = 0;
-////    printf("%s, %d\n", __func__, __LINE__);
-//    int number_of_channels = 4;
-//    int bit_depth = image->bit_depth;
-//    int stride = number_of_channels * bit_depth / 8;
-////    printf("%s, %d\n", __func__, __LINE__);
-//    for (int x = 0; x < image->width; x++) {
-////        png_byte* row = row_pointers[j];
-////        colors[i] = malloc(4 * sizeof(int));
-//        for (int y = 0; y < image->height; y++) {
-////            printf("X %d Y %d\n", x, y);
-////            printf("%s, %d\n", __func__, __LINE__);
-////            if (size <= cnt_rgba-1) {
-////                size += 100;
-////                colors = realloc(colors, size * sizeof(int*));
-////                max_cnt = realloc(colors, size * sizeof(int));
-////            }
-////            printf("%s, %d\n", __func__, __LINE__);
-//            R = image->row_pointers[y][x * stride + 0];
-//            G = image->row_pointers[y][x * stride + 1];
-//            B = image->row_pointers[y][x * stride + 2];
-//            A = image->row_pointers[y][x * stride + 3];
-////            printf("%s, %d\n", __func__, __LINE__);
-////            printf("%d %d %d %d\n", R,G,B,A);
-//            int flag_new = 1;
-//            for (int i = 0; i < cnt_rgba; i++) {
-//                if (cnt_rgba > size-1) {
-//                    printf("SIZE %d CNT %d i %d\n", size,cnt_rgba, i);
-//                    size += 100;
-//                    colors = realloc(colors, size * sizeof(int*));
-//                    printf("%s, %d\n", __func__, __LINE__);
-//                    max_cnt = realloc(max_cnt, size * sizeof(int));
-//                }
-////                printf("%s, %d\n", __func__, __LINE__);
-//                if (R == colors[i][0] && G == colors[i][1] && B == colors[i][2] && A == colors[i][3]) {
-////                    printf("%d %d %d %d\n", colors[i][0], colors[i][1], colors[i][2], colors[i][3]);
-//                    max_cnt[i] += 1;
-////                    printf("%s, %d\n", __func__, __LINE__);
-//                    flag_new = 0;
-//                    break;
-//                }
-//            }
-////            printf("%s, %d\n", __func__, __LINE__);
-//            if (flag_new) {
-////                printf("%s, %d\n", __func__, __LINE__);
-//                colors[cnt_rgba] = malloc(4 * sizeof(int));
-//                colors[cnt_rgba][0] = image->row_pointers[y][x * stride + 0];
-//                colors[cnt_rgba][1] = image->row_pointers[y][x * stride + 1];
-//                colors[cnt_rgba][2] = image->row_pointers[y][x * stride + 2];
-//                colors[cnt_rgba][3] = image->row_pointers[y][x * stride + 3];
-//                max_cnt[cnt_rgba] += 1;
-//                printf("%s, %d\n", __func__, __LINE__);
-//                cnt_rgba++;
-//            }
-////            printf("%s, %d\n", __func__, __LINE__);
-//        }
-//    }
-//    printf("%s, %d CNT %d\n", __func__, __LINE__, cnt_rgba);
-//    int max = 0; int number = 0;
-//    for (int i = 0; i < cnt_rgba; i++) {
-//        if (max_cnt[i] > max) {
-//            max = max_cnt[i];
-//            number = i;
-//        }
-//    }
-//    int frequent[4];
-//    for (int c = 0; c < 4; c++) {
-//        frequent[c] = colors[number][c];
-//    }
-//
-////    for (int x = 0; x < image->width; x++) {
-////        for (int y = 0; y < image->height; y++) {
-////            if
-////        }
-////    }
-//    for (int x = 0; x < image->width; x++) {
-////        png_bytep row_old = image->row_pointers[y];
-//        for (int y = 0; y < image->height; y++) {
-//            png_bytep row_old = image->row_pointers[y];
-//            png_bytep ptr_old = &(row_old[x*4]);
-//            if (ptr_old[0] == frequent[0] && ptr_old[1] == frequent[1]
-//            && ptr_old[2] == frequent[2] && ptr_old[3] == frequent[3]) {
-//                ptr_old[0] = new_color[0];
-//                ptr_old[1] = new_color[1];
-//                ptr_old[2] = new_color[2];
-//                ptr_old[3] = new_color[3];
-//            }
-//        }
-//    }
-//    for (int i = 0; i < size; i++) {
-//        free(colors[i]);
-//    }
-//    free(colors);
-//    free(max_cnt);
 
-//    printf("The most common color is #%06x, occurring %d times\n", max_color, max_count);
-
-//    int *** colors = calloc(256 * sizeof(int**));
-//    for (int i = 0; i < 256; i++) {
-//        colors[i] = calloc(256, sizeof(int*));
-//        for (int j = 0; j < 256; j++) {
-//            colors[i][j] = calloc(256, sizeof(int));
-//        }
-//    }
     int number_of_channels = 4;
     int bit_depth = image->bit_depth;
     int stride = number_of_channels * bit_depth / 8;
@@ -460,6 +414,7 @@ void invertColors(struct Png * image, int x1, int y1, int x2, int y2) {
     int number_of_channels = 4;
     int bit_depth = image->bit_depth;
     int stride = number_of_channels * bit_depth / 8;
+//int stride = 4;
     for (int i = x1; i <= x2; i++) {
         for (int j = y1; j <= y2; j++) {
             image->row_pointers[j][i * stride + 0] = 255 - image->row_pointers[j][i * stride + 0];
