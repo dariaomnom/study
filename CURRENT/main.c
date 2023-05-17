@@ -56,7 +56,7 @@ void read_png_file(char * file_name, struct Png * image) {
 
     FILE *fp = fopen(file_name, "rb");
     if (!fp){
-        printf("Ошибка: не удалось открыть файл для чтения.\n");
+        printf("Ошибка: не удалось открыть файл для чтения. Введите название файла с расширением '.png'\n");
         exit(1);
     }
 
@@ -91,6 +91,11 @@ void read_png_file(char * file_name, struct Png * image) {
     image->height = png_get_image_height(image->png_ptr, image->info_ptr);
     image->color_type = png_get_color_type(image->png_ptr, image->info_ptr);
     image->bit_depth = png_get_bit_depth(image->png_ptr, image->info_ptr);
+
+    if (image->bit_depth != 8) {
+        printf("Ошибка: поддерживается только 8-битная глубина цвета\n");
+        exit(1);
+    }
 
     png_read_update_info(image->png_ptr, image->info_ptr);
     if (setjmp(png_jmpbuf(image->png_ptr))){
@@ -350,7 +355,6 @@ void swap_areas(struct Png * image, int x1, int y1, int x2, int y2, char * type)
 }
 
 void change_color(struct Png * image, int * new_color) {
-
     int number_of_channels = 4;
     int bit_depth = image->bit_depth;
     int stride = number_of_channels * bit_depth / 8;
@@ -370,33 +374,35 @@ void change_color(struct Png * image, int * new_color) {
             colors[ptr[0]][ptr[1]][ptr[2]]++;
         }
     }
-    int max_freq = colors[0][0][0];
-//    int max_r = 0, max_g = 0, max_b = 0;
+
+    int freq = colors[0][0][0];
     int max_colors[] = {0,0,0};
     for (int i = 0; i < 256; i++) {
         for (int j = 0; j < 256; j++) {
             for (int k = 0; k < 256; k++) {
-                if (colors[i][j][k] > max_freq) {
+                if (colors[i][j][k] > freq) {
                     max_colors[0] = i;
                     max_colors[1] = j;
                     max_colors[2] = k;
-                    max_freq = colors[i][j][k];
+                    freq = colors[i][j][k];
                 }
             }
         }
     }
+
     for (int j = 0; j < image->height; j++) {
-        png_bytep row2 = image->row_pointers[j];
+        png_bytep row = image->row_pointers[j];
         for (int i = 0; i < image->width; i++) {
-            png_bytep ptr2 = &(row2[i * stride]);
-            if (ptr2[0] == max_colors[0] && ptr2[1] == max_colors[1] && ptr2[2] == max_colors[2]) {
-                ptr2[0] = new_color[0];
-                ptr2[1] = new_color[1];
-                ptr2[2] = new_color[2];
-                ptr2[3] = new_color[3];
+            png_bytep ptr = &(row[i * stride]);
+            if (ptr[0] == max_colors[0] && ptr[1] == max_colors[1] && ptr[2] == max_colors[2]) {
+                ptr[0] = new_color[0];
+                ptr[1] = new_color[1];
+                ptr[2] = new_color[2];
+                ptr[3] = new_color[3];
             }
         }
     }
+
     for (int i = 0; i < 256; i++) {
         for (int j = 0; j < 256; j++) {
             free(colors[i][j]);
@@ -406,7 +412,6 @@ void change_color(struct Png * image, int * new_color) {
     free(colors);
 }
 
-//invertColors();
 void invert_colors(struct Png * image, int x1, int y1, int x2, int y2) {
 //    printf("x1 %d y1 %d x2 %d y2 %d\n", x1, y1, x2, y2);
     if (x1 < 0 ||  x1 >= image->width || y1 < 0 || y1 >= image->height
@@ -435,12 +440,13 @@ void invert_colors(struct Png * image, int x1, int y1, int x2, int y2) {
 }
 
 int main(int argc, char **argv) {
+    if(argc == 1){
+        print_info();
+        return 0;
+    }
     struct Png image;
     char* output = argv[2];
     read_png_file(argv[1], &image);
-//    process_file(&image);
-//    write_png_file(argv[2], &image);
-//    char *output = argv[2];
     struct option longOpts[] = {
             {"square", required_argument, NULL, 'q'},
             {"swap", required_argument, NULL, 'w'},
@@ -456,15 +462,31 @@ int main(int argc, char **argv) {
     char *opts = "q:w:o:n:ih";
     opt = getopt_long(argc, argv, opts, longOpts, &longIndex);
 
-    int y, x, length, thickness, fill;
-    int x1, y1, x2, y2;
-    int color[4];
-    int color_fill[4];
+    int y = 0, x = 0, length = 0, thickness = 0, fill = 0;
+    int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+    int color[] = {0,0,0,0};
+    int color_fill[] = {0,0,0,0};
     char swap_type[10];
 
     while (opt != -1) {
         switch (opt) {
             case 'q':
+                if(sscanf(optarg,"%d %d %d\n", &x, &y, &lineWidth)){
+                    if(x1 < 0, y1 < 0){
+                        printf("\nКоличество линий не может быть меньше нуля\n");
+                        return 0;
+                    }
+                    if(W - lineWidth*x1 < x1+1 || H - lineWidth*y1 < y1+1){
+                        printf("\nЗадайте меньшую толщину линии-разделителя\n");
+                        return 0;
+                    }
+                    if(cutBMP(&picture, x1, y1, lineWidth, colour1, path2)){
+                        printf("\nКартинка успешно разделена\n");
+                    }
+                    else{
+                        return 0;
+                    }
+                }
                 x = atoi(argv[3]);
                 y = atoi(argv[4]);
                 length = atoi(argv[5]);
@@ -523,5 +545,226 @@ int main(int argc, char **argv) {
         opt = getopt_long(argc, argv, opts, longOpts, &longIndex);
     }
 
+
+
+
+
+
+
+
+    if (argc < 3) {printf("Не введено название опции.\n"); return 0;}
+    char *choice[10];
+    strcpy(choice, argv[2]);
+
+//    int p1[2] = {-1, -1}, p2[2] = {-1, -1}, p3[2] = {-1, -1};
+//
+//    int rad = -1, thick = -1, fill_flag = 0, pattern = -1;
+//    Rgb color1 = {0, 0, 0}, color2 = {0, 0, 0};
+//    char *wfile_name = argv[1];
+
+    int y = 0; int x = 0; int length = 0; int thickness = 0;
+    int fill = 0; int x1 = 0; int y1 = 0; int x2 = 0; int y2 = 0;
+    int* color = {0,0,0,0}; int* color_fill = {0,0,0,0}; char* swap_type[10];
+
+    opterr = 0;
+    getAllKeys(argc, argv, &y, &x, &length, &thickness, &fill, &x1, &y1, &x2, &y2, &color, &color_fill, &swap_type);
+
+    if (!strcmp(choice, "square")){
+        if (fill) draw_square(&image, x, y, length, thickness, color, fill, colorF);
+        else draw_square(&image, x, y, length, thickness, color, fill, NULL);
+    }
+
+    else if (!strcmp(choice, "swap")){
+        swap_areas(&image, x1, y1, x2, y2, swap_type);
+    }
+
+    else if (!strcmp(choice, "often")){
+        change_color(&image, color);
+    }
+
+    else if (!strcmp(choice, "inversion")){
+        invert_colors(&image, x1, y1, x2, y2);
+    }
+    else if (!strcmp(choice, "info")){
+        print_PNG_info();
+    }
+    else if (!strcmp(choice, "help")){
+        print_info();
+    }
+    else printf("Неизвестное название опции.\n");
+
+
     return 0;
+}
+
+void getAllKeys(int argc, char *argv[],
+                int* y, int* x = 0, int* length = 0, int* thickness = 0,
+                int* fill = 0, int x1 = 0, int* y1 = 0, int* x2 = 0, int* y2 = 0,
+                int** color, int** color_fill, char** swap_type){
+    struct option long_opts[] = {
+            {"square", required_argument, NULL, 'q'},
+            {"swap", required_argument, NULL, 'w'},
+            {"often", required_argument, NULL, 'o'},
+            {"inversion", required_argument, NULL, 'n'},
+            {"info", no_argument, NULL, 'i'},
+            {"help", no_argument, NULL, 'h'},
+
+            {"y", required_argument, NULL, 'y_square'},
+            {"x", required_argument, NULL, 'x_square'},
+            {"l", required_argument, NULL, 'length'},
+            {"t", required_argument, NULL, 'thinkness'},
+            {"f", required_argument, NULL, 'fill'},
+            {"start", required_argument, NULL, 'x1_y1_area'},
+            {"end", required_argument, NULL, 'x2_y2_area'},
+//            {"x1", required_argument, NULL, 'x1_area'},
+//            {"y1", required_argument, NULL, 'x2_area'},
+//            {"x2", required_argument, NULL, 'y1_area'},
+//            {"y2", required_argument, NULL, 'y2_area'},
+            {"c", required_argument, NULL, 'color'},
+            {"cf", required_argument, NULL, 'color_fill'},
+            {"p", required_argument, NULL, 'type'},
+            {NULL, 0, NULL, 0}
+    };
+    char *short_opts = "q:w:o:n:ihy:x:l:t:f:start:end:c:cf:p:";
+    int opt;
+
+    while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1){
+        switch (opt){
+            case 'q':{
+                int ind = optind - 1;
+
+//                int arg_len = strlen(argv[ind]);
+//
+//                if (!isdigit(argv[ind][0])) break;
+//                (*p1)[0] = atoi(argv[ind]);
+//
+//                int i = 0;
+//                for (; argv[ind][i] != '.'; i++)
+//                    if (i >= arg_len) break;
+//                if (i == arg_len) break;
+//
+//                if (!isdigit(argv[ind][i + 1])) break;
+//                (*p1)[1] = atoi(&argv[ind][i + 1]);
+
+                break;
+            }
+            case 'e':{
+                int ind = optind - 1;
+                int arg_len = strlen(argv[ind]);
+
+                if (!isdigit(argv[ind][0])) break;
+                (*p2)[0] = atoi(argv[ind]);
+
+                int i = 0;
+                for (; argv[ind][i] != '.'; i++)
+                    if (i >= arg_len) break;
+                if (i == arg_len) break;
+
+                if (!isdigit(argv[ind][i + 1])) break;
+                (*p2)[1] = atoi(&argv[ind][i + 1]);
+
+                break;
+            }
+            case 'z':{
+                int ind = optind - 1;
+                int arg_len = strlen(argv[ind]);
+
+                if (!isdigit(argv[ind][0])) break;
+                (*p3)[0] = atoi(argv[ind]);
+
+                int i = 0;
+                for (; argv[ind][i] != '.'; i++)
+                    if (i >= arg_len) break;
+                if (i == arg_len) break;
+
+                if (!isdigit(argv[ind][i + 1])) break;
+                (*p3)[1] = atoi(&argv[ind][i + 1]);
+
+                break;
+            }
+            case 'r':{
+                if (!isdigit(argv[optind - 1][0])) break;
+                *rad = atoi(argv[optind - 1]);
+                break;
+            }
+            case 't':{
+                if (!isdigit(argv[optind - 1][0])) break;
+                *thickness = atoi(argv[optind - 1]);
+                break;
+            }
+            case 'f':{
+                *fill_flag = 1;
+                break;
+            }
+            case 'p':{
+                if (!isdigit(argv[optind - 1][0])) break;
+                *pattern = atoi(argv[optind - 1]);
+                if (*pattern < 1 || *pattern > 3) *pattern = -1;
+                break;
+            }
+            case 'c':{
+                int ind = optind - 1;
+                int arg_len = strlen(argv[ind]);
+
+                if (!isdigit(argv[ind][0])) break;
+                int r = atoi(argv[ind]);
+                if (r >= 0 && r <= 255) color1->r = r;
+
+                int i = 0;
+                for (; argv[ind][i] != '.'; i++)
+                    if (i >= arg_len) break;
+                if (i == arg_len) break;
+                i ++;
+
+                if (!isdigit(argv[ind][i])) break;
+                int g = atoi(&argv[ind][i]);
+                if (g >= 0 && g <= 255) color1->g = g;
+
+                for (; argv[ind][i] != '.'; i++)
+                    if (i >= arg_len) break;
+                if (i == arg_len) break;
+                i ++;
+
+                if (!isdigit(argv[ind][i])) break;
+                int b = atoi(&argv[ind][i]);
+                if (b >= 0 && b <= 255) color1->b = b;
+
+                break;
+            }
+            case 'C':{
+                int ind = optind - 1;
+                int arg_len = strlen(argv[ind]);
+
+                if (!isdigit(argv[ind][0])) break;
+                int r = atoi(argv[ind]);
+                if (r >= 0 && r <= 255) color2->r = r;
+
+                int i = 0;
+                for (; argv[ind][i] != '.'; i++)
+                    if (i >= arg_len) break;
+                if (i == arg_len) break;
+                i ++;
+
+                if (!isdigit(argv[ind][i])) break;
+                int g = atoi(&argv[ind][i]);
+                if (g >= 0 && g <= 255) color2->g = g;
+
+                for (; argv[ind][i] != '.'; i++)
+                    if (i >= arg_len) break;
+                if (i == arg_len) break;
+                i ++;
+
+                if (!isdigit(argv[ind][i])) break;
+                int b = atoi(&argv[ind][i]);
+                if (b >= 0 && b <= 255) color2->b = b;
+
+                break;
+            }
+            case 'o':{
+                *wfile = argv[optind - 1];
+            }
+            default:
+                break;
+        }
+    }
 }
