@@ -1,4 +1,3 @@
-//#define PNG_DEBUG 3
 #include <stdio.h>
 #include <unistd.h>
 #include <getopt.h>
@@ -13,7 +12,6 @@ struct Png{
 
     png_structp png_ptr;
     png_infop info_ptr;
-//    int number_of_passes;
     png_bytep *row_pointers;
 };
 
@@ -25,73 +23,64 @@ void print_PNG_info(struct Png *image){
 }
 
 void print_info(){
-//    printf("\033[1;34m__Text__:\033[0m\n");
-//    "\n\033[4;31mВыберите команду:\033[0m\n"
-//    "\n\033[1;31mВыберите команду:\033[0m\n"
-    printf("Это программа с CLI для редактирования png-изображений <з\n");
-    printf("Поддерживаются файлы с глубиной цвета RGBa 8 бит\n");
-    printf("Формат ввода: ./pngedit [filename.png] -[o]/--[option] [arguments] [filename.png]\n");
+    printf("\nЭто программа с CLI для редактирования png-изображений <з \n"
+           "Поддерживаются файлы с глубиной цвета 8 бит и каналами RGBa\n");
+    printf("Формат ввода:\033[1;35m ./pngedit [infilename.png] -[o]/--[option] [arguments] [outfilename.png]\033[0m\n\n");
 
-
-    printf("[имя файла] -q/--square - нарисовать квадрат\n");
+    printf("[имя файла] \033[1;35m-q/--square\033[0m - нарисовать квадрат\n");
     printf("    [x-координата] [y-координата] - левый верхний угол\n");
     printf("    [число] - длина стороны\n");
     printf("    [число] - толщина линий (в пикселях)\n");
     printf("    [R] [G] [B] [A] - числа от 0 до 255, цвет линий\n");
     printf("    [число] - заливка (по умолчанию без заливки) (1 - заливка, 0 - нет)\n");
-    printf("    [R] [G] [B] [A] - числа от 0 до 255, цвет заливки\n");
+    printf("    [R] [G] [B] [A] - числа от 0 до 255, цвет заливки\n\n");
 
-    printf("[имя файла] -w/--swap - поменять местами 4 куска области\n");
+    printf("[имя файла] \033[1;35m-w/--swap\033[0m - поменять местами 4 куска области\n");
     printf("    [x-координата] [y-координата] - левый верхний угол\n");
     printf("    [x-координата] [y-координата] - правый нижний угол\n");
-    printf("    [число] - способ (circle - по кругу, diagonal - по диагонали)\n");
+    printf("    [число] - способ (circle - по кругу, diagonal - по диагонали)\n\n");
 
-    printf("[имя файла] -o/--often - заменить самый часто встречающийся цвет на новый\n");
-    printf("    [R] [G] [B] [A] - числа, новый цвет (RGBa)\n");
+    printf("[имя файла] \033[1;35m-o/--often\033[0m - заменить самый часто встречающийся цвет на новый\n");
+    printf("    [R] [G] [B] [A] - числа, новый цвет (RGBa)\n\n");
 
-    printf("[имя файла] -n/--inversion - инвертировать цвет в заданной области\n");
+    printf("[имя файла] \033[1;35m-n/--inversion\033[0m - инвертировать цвет в заданной области\n");
     printf("    [x-координата] [y-координата] - левый верхний угол\n");
-    printf("    [x-координата] [y-координата] - правый нижний угол\n");
+    printf("    [x-координата] [y-координата] - правый нижний угол\n\n");
 
-    printf("-i - получить информацию об изображении\n");
-    printf("-h - вызвать справку\n");
-
-    printf("[имя нового файла] - файл для вывода\n");
+    printf("[имя файла] \033[1;35m-i/--info\033[0m - получить информацию об изображении\n");
+    printf("[имя файла] \033[1;35m-h/--help\033[0m - вызвать справку\n\n");
 }
 
 void read_png_file(char * file_name, struct Png * image) {
-//    int x,y;
-    char header[8];    // 8 is the maximum size that can be checked
+    char header[8];
 
-    /* open file and test for it being a png */
     FILE *fp = fopen(file_name, "rb");
     if (!fp){
         printf("Ошибка: не удалось открыть файл для чтения.\n");
-        exit(-1);
+        exit(1);
     }
 
     fread(header, 1, 8, fp);
     if (png_sig_cmp((const unsigned char *)header, 0, 8)){
         printf("Ошибка: формат изображения не PNG.\n");
-        exit(-1);
+        exit(1);
     }
 
-    /* initialize stuff */
     image->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!image->png_ptr){
         printf("Ошибка: не удалось создать структуру изображения.\n");
-        exit(-1);
+        exit(1);
     }
 
     image->info_ptr = png_create_info_struct(image->png_ptr);
     if (!image->info_ptr){
         printf("Ошибка: не удалось создать структуру с информацией об изображении.\n");
-        exit(-1);
+        exit(1);
     }
 
     if (setjmp(png_jmpbuf(image->png_ptr))){
         printf("Ошибка инициализации.\n");
-        exit(-1);
+        exit(1);
     }
 
     png_init_io(image->png_ptr, fp);
@@ -106,12 +95,12 @@ void read_png_file(char * file_name, struct Png * image) {
     png_read_update_info(image->png_ptr, image->info_ptr);
     if (setjmp(png_jmpbuf(image->png_ptr))){
         printf("Ошибка чтения изображения.\n");
-        exit(-1);
+        exit(1);
     }
 
     if (png_get_color_type(image->png_ptr, image->info_ptr) != PNG_COLOR_TYPE_RGB_ALPHA){
         printf("Поддерживается только тип цвета RGBa.\n");
-        exit(-1);
+        exit(1);
     }
 
     image->row_pointers = (png_bytep *) malloc(sizeof(png_bytep) * image->height);
@@ -123,43 +112,42 @@ void read_png_file(char * file_name, struct Png * image) {
 }
 
 void write_png_file(char * file_name, struct Png * image) {
-    if (file_name[strlen(file_name)-4] != '.' && file_name[strlen(file_name)-3] != 'p'
-    && file_name[strlen(file_name)-2] != 'n' && file_name[strlen(file_name)-1] != 'g') {
+//    if (file_name[strlen(file_name)-4] != '.' && file_name[strlen(file_name)-3] != 'p'
+//    && file_name[strlen(file_name)-2] != 'n' && file_name[strlen(file_name)-1] != 'g') {
+//        printf("Ошибка: не передан аргумент для итогового изображения в расширении '.png'.\n");
+//        exit(-1);
+//    }
+    if (strstr(file_name, ".png") != &(file_name[strlen(file_name)-4])) {
         printf("Ошибка: не передан аргумент для итогового изображения в расширении '.png'.\n");
-        exit(-1);
+        exit(1);
     }
-    /* create file */
     FILE *fp = fopen(file_name, "wb");
     if (!fp){
         printf("Ошибка при создании файла итогового изображения.'\n");
-        exit(-1);
+        exit(1);
     }
 
-    /* initialize stuff */
     image->png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-
     if (!image->png_ptr){
         printf("Ошибка при создании структуры итогового изображения.'\n");
-        exit(-1);
+        exit(1);
     }
 
     image->info_ptr = png_create_info_struct(image->png_ptr);
     if (!image->info_ptr){
         printf("Ошибка при создании структуры с информацией об итоговом изображении.'\n");
-        exit(-1);
+        exit(1);
     }
 
     if (setjmp(png_jmpbuf(image->png_ptr))){
         printf("Ошибка инициализации\n");
-        exit(-1);
+        exit(1);
     }
-
     png_init_io(image->png_ptr, fp);
 
-    /* write header */
     if (setjmp(png_jmpbuf(image->png_ptr))){
         printf("Ошибка записи заголовка итогового файла.\n");
-        exit(-1);
+        exit(1);
     }
 
     png_set_IHDR(image->png_ptr, image->info_ptr, image->width, image->height,
@@ -168,25 +156,18 @@ void write_png_file(char * file_name, struct Png * image) {
 
     png_write_info(image->png_ptr, image->info_ptr);
 
-
-    /* write bytes */
     if (setjmp(png_jmpbuf(image->png_ptr))){
         printf("Ошибка записи данных итогового файла.\n");
-        exit(-1);
+        exit(1);
     }
-
     png_write_image(image->png_ptr, image->row_pointers);
 
-
-    /* end write */
     if (setjmp(png_jmpbuf(image->png_ptr))){
         printf("Ошибка при окончании записи итогового файла.\n");
-        exit(-1);
+        exit(1);
     }
-
     png_write_end(image->png_ptr, NULL);
 
-    /* cleanup heap allocation */
     for (int y = 0; y < image->height; y++)
         free(image->row_pointers[y]);
     free(image->row_pointers);
@@ -194,32 +175,31 @@ void write_png_file(char * file_name, struct Png * image) {
     fclose(fp);
 }
 
-void process_file(struct Png *image) {
-    int x,y;
-    if (png_get_color_type(image->png_ptr, image->info_ptr) == PNG_COLOR_TYPE_RGB){
-        // Some error handling: input file is PNG_COLOR_TYPE_RGB but must be PNG_COLOR_TYPE_RGBA
-    }
+//void process_file(struct Png *image) {
+//    int x,y;
+//    if (png_get_color_type(image->png_ptr, image->info_ptr) == PNG_COLOR_TYPE_RGB){
+//        // Some error handling: input file is PNG_COLOR_TYPE_RGB but must be PNG_COLOR_TYPE_RGBA
+//    }
+//
+//    if (png_get_color_type(image->png_ptr, image->info_ptr) != PNG_COLOR_TYPE_RGBA){
+//        // Some error handling: color_type of input file must be PNG_COLOR_TYPE_RGBA
+//    }
+//
+//    for (y = 0; y < image->height; y++) {
+//        png_byte *row = image->row_pointers[y];
+//        for (x = 0; x < image->width; x++) {
+//            png_byte *ptr = &(row[x * 4]);
+////            printf("Pixel at position [ %d - %d ] has RGBA values: %d - %d - %d - %d\n",
+////                   x, y, ptr[0], ptr[1], ptr[2], ptr[3]);
+//
+//            /* set red value to 0 and green value to the blue one */
+//            ptr[0] = 0;
+//            ptr[1] = ptr[2];
+//        }
+//    }
+//}
 
-    if (png_get_color_type(image->png_ptr, image->info_ptr) != PNG_COLOR_TYPE_RGBA){
-        // Some error handling: color_type of input file must be PNG_COLOR_TYPE_RGBA
-    }
-
-    for (y = 0; y < image->height; y++) {
-        png_byte *row = image->row_pointers[y];
-        for (x = 0; x < image->width; x++) {
-            png_byte *ptr = &(row[x * 4]);
-//            printf("Pixel at position [ %d - %d ] has RGBA values: %d - %d - %d - %d\n",
-//                   x, y, ptr[0], ptr[1], ptr[2], ptr[3]);
-
-            /* set red value to 0 and green value to the blue one */
-            ptr[0] = 0;
-            ptr[1] = ptr[2];
-        }
-    }
-}
-
-//drawSquare();
-void drawSquare(struct Png * image, int x, int y, int l, int t, int * color, int fill, int * colorF) {
+void draw_square(struct Png * image, int x, int y, int l, int t, int * color, int fill, int * colorF) {
     if (x < 0 || y < 0 || l < 0 || t < 0)  {
         printf("Введены некорретные данные: \n "
                "координаты, длина стороны квадрата и ширина линий "
@@ -241,7 +221,6 @@ void drawSquare(struct Png * image, int x, int y, int l, int t, int * color, int
         printf("Введены некорретные данные: цвета должны лежать от 0 до 255\n");
         return;
     }
-    // Вычисляем координаты углов квадрата
     int x1 = x;
     int y1 = y;
     int x2 = x + l - 1;
@@ -256,8 +235,10 @@ void drawSquare(struct Png * image, int x, int y, int l, int t, int * color, int
             for (int c = 0; c < 4; c++) {
                 if ((j >= y1 && j <= y1+t) || (j <= y2 && j >= y2-t)
                     || (i >= x1 && i <= x1+t)  || (i <= x2 && i >= x2-t)) {
+                    // рисование границ
                     image->row_pointers[j][i * stride + c] = color[c];
                 } else if (fill && (i >= x1+t && i <= x2-t) && (j >= y1+t && j <= y2-t)) {
+                    // заливка
                     image->row_pointers[j][i * stride + c] = colorF[c];
                 }
             }
@@ -266,27 +247,38 @@ void drawSquare(struct Png * image, int x, int y, int l, int t, int * color, int
 
 }
 
-//swapAreas();
-void change_frag(struct Png * image, int to_x1, int to_x2, int to_y1, int to_y2,/*
-                 int from_x1, int from_x2, int from_y1, int from_y2,*/ int h, int w) {
-    // 3 to 1 | from_3 to_1
-//    struct Png * image = *img;
+void change_frag(struct Png * image, int to_x1, int to_x2, int to_y1, int to_y2, int h, int w, png_bytep ** save) {
     int number_of_channels = 4;
     int bit_depth = image->bit_depth;
     int stride = number_of_channels * bit_depth / 8;
 
-    for (int y = to_y1; y <= to_y2; y++) {
-        png_byte *row_to = image->row_pointers[y];
-        png_byte *row_from = image->row_pointers[y + h];
-        for (int x = to_x1; x <= to_x2; x++) {
-            png_byte *ptr_to = &(row_to[x * stride]);
-            png_byte *ptr_from = &(row_from[(x + w) * stride]);
-            ptr_to[0] = ptr_from[0];
-            ptr_to[1] = ptr_from[1];
-            ptr_to[2] = ptr_from[2];
-            ptr_to[3] = ptr_from[3];
+    if (!save) {
+        for (int y = to_y1; y <= to_y2; y++) {
+            png_byte *row_to = image->row_pointers[y];
+            png_byte *row_from = image->row_pointers[y + h];
+            for (int x = to_x1; x <= to_x2; x++) {
+                png_byte *ptr_to = &(row_to[x * stride]);
+                png_byte *ptr_from = &(row_from[(x + w) * stride]);
+                ptr_to[0] = ptr_from[0];
+                ptr_to[1] = ptr_from[1];
+                ptr_to[2] = ptr_from[2];
+                ptr_to[3] = ptr_from[3];
+            }
+        }
+    } else {
+        for (int y = to_y1, y_save = 0; y <= to_y2 && y_save <= h; y++, y_save++) {
+            png_byte *row = image->row_pointers[y];
+            for (int x = to_x1, x_save = 0; x <= to_x2 && x_save <= w; x++, x_save++) {
+                png_byte *ptr2 = &(row[x * stride]);
+                ptr2[0] = save[y_save][x_save][0];
+                ptr2[1] = save[y_save][x_save][1];
+                ptr2[2] = save[y_save][x_save][2];
+                ptr2[3] = save[y_save][x_save][3];
+            }
         }
     }
+
+
 }
 
 png_bytep ** save_area(struct Png * image, int x1, int x2, int y1, int y2) {
@@ -314,7 +306,7 @@ png_bytep ** save_area(struct Png * image, int x1, int x2, int y1, int y2) {
     return save;
 }
 
-void swapAreas(struct Png * image, int x1, int y1, int x2, int y2, char * type) {
+void swap_areas(struct Png * image, int x1, int y1, int x2, int y2, char * type) {
     if (x1 < 0 ||  x1 >= image->width || y1 < 0 || y1 >= image->height
         || x2 < 0 ||  x2 >= image->width || y2 < 0 || y2 >= image->height) {
         printf("Введены некорретные данные: координаты должны "
@@ -340,55 +332,24 @@ void swapAreas(struct Png * image, int x1, int y1, int x2, int y2, char * type) 
     int area_3_x1 = x1,    area_3_x2 = area_1_x2,    area_3_y1 = area_1_y2+1,    area_3_y2 = area_3_y1 + h_area-1;
     int area_4_x1 = area_3_x2+1,    area_4_x2 = area_4_x1 + w_area-1,    area_4_y1 = area_2_y2+1,    area_4_y2 = area_4_y1 + h_area-1;
 
-    png_bytep ** save_pix_1 = save_area(image, area_1_x1, area_1_x2, area_1_y1, area_1_y2);
-    png_bytep ** save_pix_3 = save_area(image, area_3_x1, area_3_x2, area_3_y1, area_3_y2);
+    png_bytep ** save_pix_1 = save_area(image, area_1_x1, area_1_x2, area_1_y1, area_1_y2); // save area 1
+    png_bytep ** save_pix_3 = save_area(image, area_3_x1, area_3_x2, area_3_y1, area_3_y2); // save area 3
 
     if (!strcasecmp(type, "circle")) {
-        change_frag(image, area_1_x1, area_1_x2, area_1_y1, area_1_y2, h_area, 0); // area 3 to area 1
-        change_frag(image, area_3_x1, area_3_x2, area_3_y1, area_3_y2, 0, w_area); // area 4 to area 3
-        change_frag(image, area_4_x1, area_4_x2, area_4_y1, area_4_y2, 0-h_area, 0); // area 2 to area 4
-        // area 1 (saved) to 2
-        for (int y = area_2_y1, y_save = 0; y <= area_2_y2 && y_save <= h_area; y++, y_save++) {
-            png_byte *row2 = image->row_pointers[y];
-            for (int x = area_2_x1, x_save = 0; x <= area_2_x2 && x_save <= w_area; x++, x_save++) {
-                png_byte *ptr2 = &(row2[x * stride]);
-                ptr2[0] = save_pix_1[y_save][x_save][0];
-                ptr2[1] = save_pix_1[y_save][x_save][1];
-                ptr2[2] = save_pix_1[y_save][x_save][2];
-                ptr2[3] = save_pix_1[y_save][x_save][3];
-            }
-        }
+        change_frag(image, area_1_x1, area_1_x2, area_1_y1, area_1_y2, h_area, 0, NULL); // area 3 to area 1
+        change_frag(image, area_3_x1, area_3_x2, area_3_y1, area_3_y2, 0, w_area, NULL); // area 4 to area 3
+        change_frag(image, area_4_x1, area_4_x2, area_4_y1, area_4_y2, 0-h_area, 0, NULL); // area 2 to area 4
+        change_frag(image, area_2_x1, area_2_x2, area_2_y1, area_2_y2, h_area, w_area, save_pix_1); // area 1 (saved) to 2
     } else if (!strcasecmp(type, "diagonal")) {
-        change_frag(image, area_1_x1, area_1_x2, area_1_y1, area_1_y2, h_area, w_area); // area 3 to area 1
-        change_frag(image, area_3_x1, area_3_x2, area_3_y1, area_3_y2, 0-h_area, w_area); // area 3 to area 1
-
-        // area 1 (saved) to 4
-        for (int y = area_4_y1, y_save = 0; y <= area_4_y2 && y_save <= h_area; y++, y_save++) {
-            png_byte *row4 = image->row_pointers[y];
-            for (int x = area_4_x1, x_save = 0; x <= area_4_x2 && x_save <= w_area; x++, x_save++) {
-                png_byte *ptr4 = &(row4[x * stride]);
-                ptr4[0] = save_pix_1[y_save][x_save][0];
-                ptr4[1] = save_pix_1[y_save][x_save][1];
-                ptr4[2] = save_pix_1[y_save][x_save][2];
-                ptr4[3] = save_pix_1[y_save][x_save][3];
-            }
-        }
-        // area 3 (saved) to 2
-        for (int y = area_2_y1, y_save = 0; y <= area_2_y2 && y_save <= h_area; y++, y_save++) {
-            png_byte *row2 = image->row_pointers[y];
-            for (int x = area_2_x1, x_save = 0; x <= area_2_x2 && x_save <= w_area; x++, x_save++) {
-                png_byte *ptr2 = &(row2[x * stride]);
-                ptr2[0] = save_pix_3[y_save][x_save][0];
-                ptr2[1] = save_pix_3[y_save][x_save][1];
-                ptr2[2] = save_pix_3[y_save][x_save][2];
-                ptr2[3] = save_pix_3[y_save][x_save][3];
-            }
-        }
+        change_frag(image, area_1_x1, area_1_x2, area_1_y1, area_1_y2, h_area, w_area, NULL); // area 3 to area 1
+        change_frag(image, area_3_x1, area_3_x2, area_3_y1, area_3_y2, 0-h_area, w_area, NULL); // area 3 to area 1
+        change_frag(image, area_4_x1, area_4_x2, area_4_y1, area_4_y2, h_area, w_area, save_pix_1); // area 1 (saved) to 4
+        change_frag(image, area_2_x1, area_2_x2, area_2_y1, area_2_y2, h_area, w_area, save_pix_3); // area 3 (saved) to 2
     }
 
 }
-//changeColor();
-void changeColor(struct Png * image, int * new_color) {
+
+void change_color(struct Png * image, int * new_color) {
 
     int number_of_channels = 4;
     int bit_depth = image->bit_depth;
@@ -446,7 +407,7 @@ void changeColor(struct Png * image, int * new_color) {
 }
 
 //invertColors();
-void invertColors(struct Png * image, int x1, int y1, int x2, int y2) {
+void invert_colors(struct Png * image, int x1, int y1, int x2, int y2) {
 //    printf("x1 %d y1 %d x2 %d y2 %d\n", x1, y1, x2, y2);
     if (x1 < 0 ||  x1 >= image->width || y1 < 0 || y1 >= image->height
     || x2 < 0 ||  x2 >= image->width || y2 < 0 || y2 >= image->height) {
@@ -518,13 +479,12 @@ int main(int argc, char **argv) {
                     color_fill[1] = atoi(argv[13]);
                     color_fill[2] = atoi(argv[14]);
                     color_fill[3] = atoi(argv[15]);
-                    drawSquare(&image, x, y, length, thickness, color, fill, color_fill);
+                    draw_square(&image, x, y, length, thickness, color, fill, color_fill);
                     write_png_file(argv[16], &image);
                 } else {
-                    drawSquare(&image, x, y, length, thickness, color, fill, NULL);
+                    draw_square(&image, x, y, length, thickness, color, fill, NULL);
                     write_png_file(argv[12], &image);
                 }
-
                 break;
             case 'w':
                 x1 = atoi(argv[3]);
@@ -532,7 +492,7 @@ int main(int argc, char **argv) {
                 x2 = atoi(argv[5]);
                 y2 = atoi(argv[6]);
                 strcpy(swap_type, argv[7]);
-                swapAreas(&image, x1, y1, x2, y2, swap_type);
+                swap_areas(&image, x1, y1, x2, y2, swap_type);
                 write_png_file(argv[8], &image);
                 break;
             case 'o':
@@ -540,7 +500,7 @@ int main(int argc, char **argv) {
                 color[1] = atoi(argv[4]);
                 color[2] = atoi(argv[5]);
                 color[3] = atoi(argv[6]);
-                changeColor(&image, color);
+                change_color(&image, color);
                 write_png_file(argv[7], &image);
                 break;
             case 'n':
@@ -548,9 +508,8 @@ int main(int argc, char **argv) {
                 y1 = atoi(argv[4]);
                 x2 = atoi(argv[5]);
                 y2 = atoi(argv[6]);
-                invertColors(&image, x1, y1, x2, y2);
+                invert_colors(&image, x1, y1, x2, y2);
                 write_png_file(argv[7], &image);
-//                    write_png_file();
                 break;
             case 'i':
                 print_PNG_info(&image);
@@ -558,6 +517,8 @@ int main(int argc, char **argv) {
             case 'h':
                 print_info();
                 break;
+            default:
+                printf("Команды не введены.\n");
         }
         opt = getopt_long(argc, argv, opts, longOpts, &longIndex);
     }
