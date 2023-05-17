@@ -330,58 +330,18 @@ void swapAreas(struct Png * image, int x1, int y1, int x2, int y2, char * type) 
     int bit_depth = image->bit_depth;
     int stride = number_of_channels * bit_depth / 8;
 
-    int h = y2 - y1 + 1;
-    int w = x2 - x1 + 1;
+    int h = y2 - y1 + 1, w = x2 - x1 + 1;
     if (w % 2) { x2 -= 1; w--; }
     if (h % 2) { y2 -= 1; h--; }
-    int h_area = h / 2;
-    int w_area = w / 2;
+    int h_area = h / 2, w_area = w / 2;
 
     int area_1_x1 = x1,    area_1_x2 = x1 + w_area-1,    area_1_y1 = y1,    area_1_y2 = y1 + h_area-1;
     int area_2_x1 = area_1_x2+1,    area_2_x2 = area_2_x1 + w_area-1,    area_2_y1 = y1,    area_2_y2 = y1 + h_area-1;
     int area_3_x1 = x1,    area_3_x2 = area_1_x2,    area_3_y1 = area_1_y2+1,    area_3_y2 = area_3_y1 + h_area-1;
     int area_4_x1 = area_3_x2+1,    area_4_x2 = area_4_x1 + w_area-1,    area_4_y1 = area_2_y2+1,    area_4_y2 = area_4_y1 + h_area-1;
 
-    // save area 1
     png_bytep ** save_pix_1 = save_area(image, area_1_x1, area_1_x2, area_1_y1, area_1_y2);
-
-//    png_bytep ** save_pix_1 = calloc(h_area, sizeof(png_bytep *));
-//    for (int i = 0; i < h_area; i++) {
-//        save_pix_1[i] = (png_bytep*) calloc(w_area, sizeof(png_bytep));
-//        for (int j = 0; j < w_area; j++) {
-//            save_pix_1[i][j] = (png_bytep) calloc(4, sizeof(png_byte));
-//        }
-//    }
-//    for (int y = area_1_y1, y_s = 0; y < area_1_y1+h_area; y++, y_s++) {
-//        png_byte *row = image->row_pointers[y];
-//        for (int x = area_1_x1, x_s = 0; x < area_1_x1+w_area; x++, x_s++) {
-//            png_byte *ptr = &(row[x * stride]);
-//            save_pix_1[y_s][x_s][0] = ptr[0];
-//            save_pix_1[y_s][x_s][1] = ptr[1];
-//            save_pix_1[y_s][x_s][2] = ptr[2];
-//            save_pix_1[y_s][x_s][3] = ptr[3];
-//        }
-//    }
-    // save area 3
-    png_bytep ** save_pix_3 = save_area(image, area_1_x1, area_1_x2, area_1_y1, area_1_y2);
-
-//    png_bytep ** save_pix_3 = calloc(h_area, sizeof(png_bytep *));
-//    for (int i = 0; i < h_area; i++) {
-//        save_pix_3[i] = (png_bytep*) calloc(w_area, sizeof(png_bytep));
-//        for (int j = 0; j < w_area; j++) {
-//            save_pix_3[i][j] = (png_bytep) calloc(4, sizeof(png_byte));
-//        }
-//    }
-//    for (int y = area_3_y1, y_s = 0; y < area_3_y1+h_area; y++, y_s++) {
-//        png_byte *row = image->row_pointers[y];
-//        for (int x = area_3_x1, x_s = 0; x < area_3_x1+w_area; x++, x_s++) {
-//            png_byte *ptr = &(row[x * stride]);
-//            save_pix_3[y_s][x_s][0] = ptr[0];
-//            save_pix_3[y_s][x_s][1] = ptr[1];
-//            save_pix_3[y_s][x_s][2] = ptr[2];
-//            save_pix_3[y_s][x_s][3] = ptr[3];
-//        }
-//    }
+    png_bytep ** save_pix_3 = save_area(image, area_3_x1, area_3_x2, area_3_y1, area_3_y2);
 
     if (!strcasecmp(type, "circle")) {
         change_frag(image, area_1_x1, area_1_x2, area_1_y1, area_1_y2, h_area, 0); // area 3 to area 1
@@ -399,57 +359,31 @@ void swapAreas(struct Png * image, int x1, int y1, int x2, int y2, char * type) 
             }
         }
     } else if (!strcasecmp(type, "diagonal")) {
-        change_frag(image, area_1_x1, area_1_x2, area_1_y1, area_1_y2, h_area, 0); // area 3 to area 1
-//        for (int y = area_1_y1; y <= area_1_y2; y++) {
-//            png_byte *row1 = image->row_pointers[y];
-//            png_byte *row3 = image->row_pointers[y + h_area];
-//            for (int x = area_1_x1; x <= area_1_x2; x++) {
-//                png_byte *ptr1 = &(row1[x * stride]);
-//                png_byte *ptr3 = &(row3[x * stride]);
-//                ptr1[0] = ptr3[0];
-//                ptr1[1] = ptr3[1];
-//                ptr1[2] = ptr3[2];
-//                ptr1[3] = ptr3[3];
-//            }
-//        }
-        // area 4 to area 3
-//        for (int y = area_3_y1; y <= area_3_y2; y++) {
-//            png_byte *row3 = image->row_pointers[y];
-//            png_byte *row4 = image->row_pointers[y];
-//            for (int x = area_3_x1; x <= area_3_x2; x++) {
-//                png_byte *ptr3 = &(row3[x * stride]);
-//                png_byte *ptr4 = &(row4[(x + w_area) * stride]);
-//                ptr3[0] = ptr4[0];
-//                ptr3[1] = ptr4[1];
-//                ptr3[2] = ptr4[2];
-//                ptr3[3] = ptr4[3];
-//
-//            }
-//        }
-        // area 2 to area 4
-//        for (int y = area_4_y1; y <= area_4_y2; y++) {
-//            png_byte *row4 = image->row_pointers[y];
-//            png_byte *row2 = image->row_pointers[y - h_area];
-//            for (int x = area_4_x1; x <= area_4_x2; x++) {
-//                png_byte *ptr4 = &(row4[x * stride]);
-//                png_byte *ptr2 = &(row2[x * stride]);
-//                ptr4[0] = ptr2[0];
-//                ptr4[1] = ptr2[1];
-//                ptr4[2] = ptr2[2];
-//                ptr4[3] = ptr2[3];
-//            }
-//        }
-        // area 1 (saved) to 2
-//        for (int y = area_2_y1, y_save = 0; y <= area_2_y2 && y_save <= h_area; y++, y_save++) {
-//            png_byte *row2 = image->row_pointers[y];
-//            for (int x = area_2_x1, x_save = 0; x <= area_2_x2 && x_save <= w_area; x++, x_save++) {
-//                png_byte *ptr2 = &(row2[x * stride]);
-//                ptr2[0] = save_pix[y_save][x_save][0];
-//                ptr2[1] = save_pix[y_save][x_save][1];
-//                ptr2[2] = save_pix[y_save][x_save][2];
-//                ptr2[3] = save_pix[y_save][x_save][3];
-//            }
-//        }
+        change_frag(image, area_1_x1, area_1_x2, area_1_y1, area_1_y2, h_area, w_area); // area 3 to area 1
+        change_frag(image, area_3_x1, area_3_x2, area_3_y1, area_3_y2, 0-h_area, w_area); // area 3 to area 1
+
+        // area 1 (saved) to 4
+        for (int y = area_4_y1, y_save = 0; y <= area_4_y2 && y_save <= h_area; y++, y_save++) {
+            png_byte *row4 = image->row_pointers[y];
+            for (int x = area_4_x1, x_save = 0; x <= area_4_x2 && x_save <= w_area; x++, x_save++) {
+                png_byte *ptr4 = &(row4[x * stride]);
+                ptr4[0] = save_pix_1[y_save][x_save][0];
+                ptr4[1] = save_pix_1[y_save][x_save][1];
+                ptr4[2] = save_pix_1[y_save][x_save][2];
+                ptr4[3] = save_pix_1[y_save][x_save][3];
+            }
+        }
+        // area 3 (saved) to 2
+        for (int y = area_2_y1, y_save = 0; y <= area_2_y2 && y_save <= h_area; y++, y_save++) {
+            png_byte *row2 = image->row_pointers[y];
+            for (int x = area_2_x1, x_save = 0; x <= area_2_x2 && x_save <= w_area; x++, x_save++) {
+                png_byte *ptr2 = &(row2[x * stride]);
+                ptr2[0] = save_pix_3[y_save][x_save][0];
+                ptr2[1] = save_pix_3[y_save][x_save][1];
+                ptr2[2] = save_pix_3[y_save][x_save][2];
+                ptr2[3] = save_pix_3[y_save][x_save][3];
+            }
+        }
     }
 
 }
