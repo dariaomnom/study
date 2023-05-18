@@ -3,6 +3,7 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <png.h>
 
 struct Png{
@@ -439,6 +440,9 @@ void invert_colors(struct Png * image, int x1, int y1, int x2, int y2) {
     }
 }
 
+
+void all_keys(int argc, char *argv[], int* length, int* thickness, int* fill, int* x1, int* y1, int* x2, int* y2, int** color, int** color_fill, char** swap_type);
+
 int main(int argc, char **argv) {
     if(argc == 1){
         print_info();
@@ -447,103 +451,103 @@ int main(int argc, char **argv) {
     struct Png image;
     char* output = argv[2];
     read_png_file(argv[1], &image);
-    struct option longOpts[] = {
-            {"square", required_argument, NULL, 'q'},
-            {"swap", required_argument, NULL, 'w'},
-            {"often", required_argument, NULL, 'o'},
-            {"inversion", required_argument, NULL, 'n'},
-            {"info", no_argument, NULL, 'i'},
-            {"help", no_argument, NULL, 'h'},
-            {NULL, 0, NULL, 0},
-    };
-    int opt;
-    int longIndex;
+//    struct option longOpts[] = {
+//            {"square", required_argument, NULL, 'q'},
+//            {"swap", required_argument, NULL, 'w'},
+//            {"often", required_argument, NULL, 'o'},
+//            {"inversion", required_argument, NULL, 'n'},
+//            {"info", no_argument, NULL, 'i'},
+//            {"help", no_argument, NULL, 'h'},
+//            {NULL, 0, NULL, 0},
+//    };
+//    int opt;
+//    int longIndex;
 //    char *opts = "q:w:o:n:s:e:l:t:c:f:r:d:i:h:";
-    char *opts = "q:w:o:n:ih";
-    opt = getopt_long(argc, argv, opts, longOpts, &longIndex);
-
-    int y = 0, x = 0, length = 0, thickness = 0, fill = 0;
-    int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
-    int color[] = {0,0,0,0};
-    int color_fill[] = {0,0,0,0};
-    char swap_type[10];
-
-    while (opt != -1) {
-        switch (opt) {
-            case 'q':
-                if(sscanf(optarg,"%d %d %d\n", &x, &y, &lineWidth)){
-                    if(x1 < 0, y1 < 0){
-                        printf("\nКоличество линий не может быть меньше нуля\n");
-                        return 0;
-                    }
-                    if(W - lineWidth*x1 < x1+1 || H - lineWidth*y1 < y1+1){
-                        printf("\nЗадайте меньшую толщину линии-разделителя\n");
-                        return 0;
-                    }
-                    if(cutBMP(&picture, x1, y1, lineWidth, colour1, path2)){
-                        printf("\nКартинка успешно разделена\n");
-                    }
-                    else{
-                        return 0;
-                    }
-                }
-                x = atoi(argv[3]);
-                y = atoi(argv[4]);
-                length = atoi(argv[5]);
-                thickness = atoi(argv[6]);
-                color[0] = atoi(argv[7]);
-                color[1] = atoi(argv[8]);
-                color[2] = atoi(argv[9]);
-                color[3] = atoi(argv[10]);
-                fill = atoi(argv[11]);
-                if (fill) {
-                    color_fill[0] = atoi(argv[12]);
-                    color_fill[1] = atoi(argv[13]);
-                    color_fill[2] = atoi(argv[14]);
-                    color_fill[3] = atoi(argv[15]);
-                    draw_square(&image, x, y, length, thickness, color, fill, color_fill);
-                    write_png_file(argv[16], &image);
-                } else {
-                    draw_square(&image, x, y, length, thickness, color, fill, NULL);
-                    write_png_file(argv[12], &image);
-                }
-                break;
-            case 'w':
-                x1 = atoi(argv[3]);
-                y1 = atoi(argv[4]);
-                x2 = atoi(argv[5]);
-                y2 = atoi(argv[6]);
-                strcpy(swap_type, argv[7]);
-                swap_areas(&image, x1, y1, x2, y2, swap_type);
-                write_png_file(argv[8], &image);
-                break;
-            case 'o':
-                color[0] = atoi(argv[3]);
-                color[1] = atoi(argv[4]);
-                color[2] = atoi(argv[5]);
-                color[3] = atoi(argv[6]);
-                change_color(&image, color);
-                write_png_file(argv[7], &image);
-                break;
-            case 'n':
-                x1 = atoi(argv[3]);
-                y1 = atoi(argv[4]);
-                x2 = atoi(argv[5]);
-                y2 = atoi(argv[6]);
-                invert_colors(&image, x1, y1, x2, y2);
-                write_png_file(argv[7], &image);
-                break;
-            case 'i':
-                print_PNG_info(&image);
-                break;
-            case 'h':
-                print_info();
-                break;
-            default:
-                printf("Команды не введены.\n");
-        }
-        opt = getopt_long(argc, argv, opts, longOpts, &longIndex);
-    }
+//    char *opts = "q:w:o:n:ih";
+//    opt = getopt_long(argc, argv, opts, longOpts, &longIndex);
+//
+//    int y = 0, x = 0, length = 0, thickness = 0, fill = 0;
+//    int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+//    int color[] = {0,0,0,0};
+//    int color_fill[] = {0,0,0,0};
+//    char swap_type[10];
+//
+//    while (opt != -1) {
+//        switch (opt) {
+//            case 'q':
+//                if(sscanf(optarg,"%d %d %d\n", &x, &y, &lineWidth)){
+//                    if(x1 < 0, y1 < 0){
+//                        printf("\nКоличество линий не может быть меньше нуля\n");
+//                        return 0;
+//                    }
+//                    if(W - lineWidth*x1 < x1+1 || H - lineWidth*y1 < y1+1){
+//                        printf("\nЗадайте меньшую толщину линии-разделителя\n");
+//                        return 0;
+//                    }
+//                    if(cutBMP(&picture, x1, y1, lineWidth, colour1, path2)){
+//                        printf("\nКартинка успешно разделена\n");
+//                    }
+//                    else{
+//                        return 0;
+//                    }
+//                }
+//                x = atoi(argv[3]);
+//                y = atoi(argv[4]);
+//                length = atoi(argv[5]);
+//                thickness = atoi(argv[6]);
+//                color[0] = atoi(argv[7]);
+//                color[1] = atoi(argv[8]);
+//                color[2] = atoi(argv[9]);
+//                color[3] = atoi(argv[10]);
+//                fill = atoi(argv[11]);
+//                if (fill) {
+//                    color_fill[0] = atoi(argv[12]);
+//                    color_fill[1] = atoi(argv[13]);
+//                    color_fill[2] = atoi(argv[14]);
+//                    color_fill[3] = atoi(argv[15]);
+//                    draw_square(&image, x, y, length, thickness, color, fill, color_fill);
+//                    write_png_file(argv[16], &image);
+//                } else {
+//                    draw_square(&image, x, y, length, thickness, color, fill, NULL);
+//                    write_png_file(argv[12], &image);
+//                }
+//                break;
+//            case 'w':
+//                x1 = atoi(argv[3]);
+//                y1 = atoi(argv[4]);
+//                x2 = atoi(argv[5]);
+//                y2 = atoi(argv[6]);
+//                strcpy(swap_type, argv[7]);
+//                swap_areas(&image, x1, y1, x2, y2, swap_type);
+//                write_png_file(argv[8], &image);
+//                break;
+//            case 'o':
+//                color[0] = atoi(argv[3]);
+//                color[1] = atoi(argv[4]);
+//                color[2] = atoi(argv[5]);
+//                color[3] = atoi(argv[6]);
+//                change_color(&image, color);
+//                write_png_file(argv[7], &image);
+//                break;
+//            case 'n':
+//                x1 = atoi(argv[3]);
+//                y1 = atoi(argv[4]);
+//                x2 = atoi(argv[5]);
+//                y2 = atoi(argv[6]);
+//                invert_colors(&image, x1, y1, x2, y2);
+//                write_png_file(argv[7], &image);
+//                break;
+//            case 'i':
+//                print_PNG_info(&image);
+//                break;
+//            case 'h':
+//                print_info();
+//                break;
+//            default:
+//                printf("Команды не введены.\n");
+//        }
+//        opt = getopt_long(argc, argv, opts, longOpts, &longIndex);
+//    }
 
 
 
@@ -553,7 +557,7 @@ int main(int argc, char **argv) {
 
 
     if (argc < 3) {printf("Не введено название опции.\n"); return 0;}
-    char *choice[10];
+    char *choice = malloc(10 * sizeof(char));
     strcpy(choice, argv[2]);
 
 //    int p1[2] = {-1, -1}, p2[2] = {-1, -1}, p3[2] = {-1, -1};
@@ -562,33 +566,42 @@ int main(int argc, char **argv) {
 //    Rgb color1 = {0, 0, 0}, color2 = {0, 0, 0};
 //    char *wfile_name = argv[1];
 
-    int y = 0; int x = 0; int length = 0; int thickness = 0;
+    /*int y = 0; int x = 0*/
+    int length = 0; int thickness = 0;
     int fill = 0; int x1 = 0; int y1 = 0; int x2 = 0; int y2 = 0;
-    int* color = {0,0,0,0}; int* color_fill = {0,0,0,0}; char* swap_type[10];
+//    int color[] = {0,0,0,0}; int color_fill[] = {0,0,0,0};
+    int * color = calloc(4, sizeof(int));
+    int * color_fill = calloc(4, sizeof(int));
+    char * swap_type = malloc(10 * sizeof(char));
 
     opterr = 0;
-    getAllKeys(argc, argv, &y, &x, &length, &thickness, &fill, &x1, &y1, &x2, &y2, &color, &color_fill, &swap_type);
+    all_keys(argc, argv, &length, &thickness, &fill, &x1, &y1, &x2, &y2, &color, &color_fill, &swap_type);
 
-    if (!strcmp(choice, "square")){
-        if (fill) draw_square(&image, x, y, length, thickness, color, fill, colorF);
-        else draw_square(&image, x, y, length, thickness, color, fill, NULL);
+    if (!strcasecmp(choice, "square")){
+//        sscanf(optarg,"%d %d %d\n", &x1, &y1, &length, &thickness, &(color[0]), )
+        if (fill) draw_square(&image, x1, y1, length, thickness, color, fill, color_fill);
+        else draw_square(&image, x1, y1, length, thickness, color, fill, NULL);
+        write_png_file(argv[argc-1], &image);
     }
 
-    else if (!strcmp(choice, "swap")){
+    else if (!strcasecmp(choice, "swap")){
         swap_areas(&image, x1, y1, x2, y2, swap_type);
+        write_png_file(argv[argc-1], &image);
     }
 
-    else if (!strcmp(choice, "often")){
+    else if (!strcasecmp(choice, "often")){
         change_color(&image, color);
+        write_png_file(argv[argc-1], &image);
     }
 
-    else if (!strcmp(choice, "inversion")){
+    else if (!strcasecmp(choice, "inversion")){
         invert_colors(&image, x1, y1, x2, y2);
+        write_png_file(argv[argc-1], &image);
     }
-    else if (!strcmp(choice, "info")){
-        print_PNG_info();
+    else if (!strcasecmp(choice, "info")){
+        print_PNG_info(&image);
     }
-    else if (!strcmp(choice, "help")){
+    else if (!strcasecmp(choice, "help")){
         print_info();
     }
     else printf("Неизвестное название опции.\n");
@@ -597,173 +610,207 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void getAllKeys(int argc, char *argv[],
-                int* y, int* x = 0, int* length = 0, int* thickness = 0,
-                int* fill = 0, int x1 = 0, int* y1 = 0, int* x2 = 0, int* y2 = 0,
+void all_keys(int argc, char *argv[],
+                int* length, int* thickness,
+                int* fill, int* x1, int* y1, int* x2, int* y2,
                 int** color, int** color_fill, char** swap_type){
     struct option long_opts[] = {
-            {"square", required_argument, NULL, 'q'},
-            {"swap", required_argument, NULL, 'w'},
-            {"often", required_argument, NULL, 'o'},
-            {"inversion", required_argument, NULL, 'n'},
+//            {"square", required_argument, NULL, 'q'},
+//            {"swap", required_argument, NULL, 'w'},
+//            {"often", required_argument, NULL, 'o'},
+//            {"inversion", required_argument, NULL, 'n'},
             {"info", no_argument, NULL, 'i'},
             {"help", no_argument, NULL, 'h'},
 
-            {"y", required_argument, NULL, 'y_square'},
-            {"x", required_argument, NULL, 'x_square'},
-            {"l", required_argument, NULL, 'length'},
-            {"t", required_argument, NULL, 'thinkness'},
-            {"f", required_argument, NULL, 'fill'},
-            {"start", required_argument, NULL, 'x1_y1_area'},
-            {"end", required_argument, NULL, 'x2_y2_area'},
+//            {"x", required_argument, NULL, 'x_square'},
+//            {"y", required_argument, NULL, 'y_square'},
+            {"length", required_argument, NULL, 'l'},
+            {"thinkness", required_argument, NULL, 't'},
+            {"fill", required_argument, NULL, 'f'},
+            {"start", required_argument, NULL, 's'},
+            {"end", required_argument, NULL, 'e'},
 //            {"x1", required_argument, NULL, 'x1_area'},
 //            {"y1", required_argument, NULL, 'x2_area'},
 //            {"x2", required_argument, NULL, 'y1_area'},
 //            {"y2", required_argument, NULL, 'y2_area'},
-            {"c", required_argument, NULL, 'color'},
-            {"cf", required_argument, NULL, 'color_fill'},
-            {"p", required_argument, NULL, 'type'},
+            {"color", required_argument, NULL, 'c'},
+            {"colorfill", required_argument, NULL, 'r'},
+            {"type", required_argument, NULL, 'p'},
             {NULL, 0, NULL, 0}
     };
-    char *short_opts = "q:w:o:n:ihy:x:l:t:f:start:end:c:cf:p:";
+    char *short_opts = "ihl:t:f:s:e:c:r:p:";
     int opt;
 
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1){
         switch (opt){
-            case 'q':{
+            case 's': {
                 int ind = optind - 1;
+                int arg_len = strlen(argv[ind]);
+                if (!isdigit(argv[ind][0])) break;
+                *x1 = atoi(argv[ind]);
+                int i = 0;
+                for (; argv[ind][i] != '.'; i++)
+                    if (i >= arg_len) break;
+                if (i == arg_len) break;
+                if (!isdigit(argv[ind][i + 1])) break;
+                *y1 = atoi(&argv[ind][i + 1]);
 
-//                int arg_len = strlen(argv[ind]);
-//
-//                if (!isdigit(argv[ind][0])) break;
-//                (*p1)[0] = atoi(argv[ind]);
-//
+                printf("x1 %d y1 %d\n", *x1, *y1);
+                break;
+            }
+            case 'e': {
+                int ind = optind - 1;
+                int arg_len = strlen(argv[ind]);
+                if (!isdigit(argv[ind][0])) break;
+                *x2 = atoi(argv[ind]);
+                int i = 0;
+                for (; argv[ind][i] != '.'; i++)
+                    if (i >= arg_len) break;
+                if (i == arg_len) break;
+                if (!isdigit(argv[ind][i + 1])) break;
+                *y2 = atoi(&argv[ind][i + 1]);
+
+                printf("x2 %d y2 %d\n", *x2, *y2);
+                break;
+            }
+            case 'l': {
+                int ind = optind - 1;
+                int arg_len = strlen(argv[ind]);
+                if (!isdigit(argv[ind][0])) break;
+                *length = atoi(argv[ind]);
 //                int i = 0;
 //                for (; argv[ind][i] != '.'; i++)
 //                    if (i >= arg_len) break;
 //                if (i == arg_len) break;
 //
 //                if (!isdigit(argv[ind][i + 1])) break;
-//                (*p1)[1] = atoi(&argv[ind][i + 1]);
-
+//                (*p3)[1] = atoi(&argv[ind][i + 1]);
+                printf("len %d\n", *length);
                 break;
             }
-            case 'e':{
+            case 't': {
+//                if (!isdigit(argv[optind - 1][0])) break;
+//                *rad = atoi(argv[optind - 1]);
                 int ind = optind - 1;
                 int arg_len = strlen(argv[ind]);
-
                 if (!isdigit(argv[ind][0])) break;
-                (*p2)[0] = atoi(argv[ind]);
-
-                int i = 0;
-                for (; argv[ind][i] != '.'; i++)
-                    if (i >= arg_len) break;
-                if (i == arg_len) break;
-
-                if (!isdigit(argv[ind][i + 1])) break;
-                (*p2)[1] = atoi(&argv[ind][i + 1]);
-
+                *thickness = atoi(argv[ind]);
+                printf("thickness %d\n", *thickness);
                 break;
             }
-            case 'z':{
-                int ind = optind - 1;
-                int arg_len = strlen(argv[ind]);
-
-                if (!isdigit(argv[ind][0])) break;
-                (*p3)[0] = atoi(argv[ind]);
-
-                int i = 0;
-                for (; argv[ind][i] != '.'; i++)
-                    if (i >= arg_len) break;
-                if (i == arg_len) break;
-
-                if (!isdigit(argv[ind][i + 1])) break;
-                (*p3)[1] = atoi(&argv[ind][i + 1]);
-
-                break;
-            }
-            case 'r':{
+            case 'f': {
                 if (!isdigit(argv[optind - 1][0])) break;
-                *rad = atoi(argv[optind - 1]);
+                *fill = atoi(argv[optind - 1]);
+                if (*fill != 0 && *fill != 1) break;
+                printf("fill %d\n", *fill);
                 break;
             }
-            case 't':{
-                if (!isdigit(argv[optind - 1][0])) break;
-                *thickness = atoi(argv[optind - 1]);
-                break;
-            }
-            case 'f':{
-                *fill_flag = 1;
-                break;
-            }
-            case 'p':{
-                if (!isdigit(argv[optind - 1][0])) break;
-                *pattern = atoi(argv[optind - 1]);
-                if (*pattern < 1 || *pattern > 3) *pattern = -1;
-                break;
-            }
-            case 'c':{
+            case 'c': {
+//                int ind = optind - 1;
+//                int arg_len = strlen(argv[ind]);
+//                if (!isdigit(argv[ind][0])) break;
+//                *(c[0]) = atoi(argv[ind]);
+//
+//                int i = 0;
+//                for (; argv[ind][i] != '.'; i++)
+//                    if (i >= arg_len) break;
+//                if (i == arg_len) break;
+//                if (!isdigit(argv[ind][i + 1])) break;
+//                *(c[1]) = atoi(&argv[ind][i + 1]);
+//
+//                int j = 0;
+//                for (; argv[ind][i] != '.'; j++)
+//                    if (j >= arg_len) break;
+//                if (j == arg_len) break;
+//                if (!isdigit(argv[ind][j + 1])) break;
+//                *(c[1]) = atoi(&argv[ind][i + 1]);
+//                break;
+
                 int ind = optind - 1;
                 int arg_len = strlen(argv[ind]);
 
                 if (!isdigit(argv[ind][0])) break;
-                int r = atoi(argv[ind]);
-                if (r >= 0 && r <= 255) color1->r = r;
+                (*color)[0] = atoi(argv[ind]);
+//                if (*(c[0]) >= 0 && r <= 255) color1->r = r;
 
                 int i = 0;
                 for (; argv[ind][i] != '.'; i++)
                     if (i >= arg_len) break;
                 if (i == arg_len) break;
                 i ++;
-
                 if (!isdigit(argv[ind][i])) break;
-                int g = atoi(&argv[ind][i]);
-                if (g >= 0 && g <= 255) color1->g = g;
+                (*color)[1] = atoi(&argv[ind][i]);
+//                if (*(c[1]) >= 0 && *(c[1]) <= 255) color1->g = g;
 
                 for (; argv[ind][i] != '.'; i++)
                     if (i >= arg_len) break;
                 if (i == arg_len) break;
                 i ++;
-
                 if (!isdigit(argv[ind][i])) break;
-                int b = atoi(&argv[ind][i]);
-                if (b >= 0 && b <= 255) color1->b = b;
+                (*color)[2] = atoi(&argv[ind][i]);
+//                if (*(c[2]) >= 0 && b <= 255) color1->b = b;
 
+                for (; argv[ind][i] != '.'; i++)
+                    if (i >= arg_len) break;
+                if (i == arg_len) break;
+                i ++;
+                if (!isdigit(argv[ind][i])) break;
+                (*color)[3] = atoi(&argv[ind][i]);
+//                if (*(c[2]) >= 0 && b <= 255) color1->b = b;
+
+                printf("rgb color %d %d %d %d\n", (*color)[0], (*color)[1], (*color)[2], (*color)[3]);
                 break;
             }
-            case 'C':{
+            case 'r': {
                 int ind = optind - 1;
                 int arg_len = strlen(argv[ind]);
 
                 if (!isdigit(argv[ind][0])) break;
-                int r = atoi(argv[ind]);
-                if (r >= 0 && r <= 255) color2->r = r;
-
+                (*color_fill)[0] = atoi(argv[ind]);
+//                if (*(c[0]) >= 0 && r <= 255) color1->r = r;
+                printf(" >>> %d <<< ", __LINE__);
                 int i = 0;
                 for (; argv[ind][i] != '.'; i++)
                     if (i >= arg_len) break;
                 if (i == arg_len) break;
                 i ++;
-
+                printf(" >>> %d <<< ", __LINE__);
                 if (!isdigit(argv[ind][i])) break;
-                int g = atoi(&argv[ind][i]);
-                if (g >= 0 && g <= 255) color2->g = g;
+                (*color_fill)[1] = atoi(&argv[ind][i]);
+//                if (*(c[1]) >= 0 && *(c[1]) <= 255) color1->g = g;
+                printf(" >>> %d <<< ", __LINE__);
+                for (; argv[ind][i] != '.'; i++)
+                    if (i >= arg_len) break;
+                if (i == arg_len) break;
+                i ++;
+                printf(" >>> %d <<< ", __LINE__);
+                if (!isdigit(argv[ind][i])) break;
+                (*color_fill)[2] = atoi(&argv[ind][i]);
+//                if (*(c[2]) >= 0 && b <= 255) color1->b = b;
 
                 for (; argv[ind][i] != '.'; i++)
                     if (i >= arg_len) break;
                 if (i == arg_len) break;
                 i ++;
-
                 if (!isdigit(argv[ind][i])) break;
-                int b = atoi(&argv[ind][i]);
-                if (b >= 0 && b <= 255) color2->b = b;
+                (*color_fill)[3] = atoi(&argv[ind][i]);
+//                if (*(c[2]) >= 0 && b <= 255) color1->b = b;
 
+                printf("rgb colorfill %d %d %d %d\n", (*color_fill)[0], (*color_fill)[1], (*color_fill)[2], (*color_fill)[3]);
                 break;
             }
-            case 'o':{
-                *wfile = argv[optind - 1];
+            case 'p': {
+                strcpy(*swap_type, argv[optind - 1]);
+                if (strcasecmp(*swap_type, "circle")!=0 && strcasecmp(*swap_type, "circle")!=0) {
+                    strcpy(*swap_type, "none");
+                }
+                break;
             }
+//            case 'o':{
+//                *wfile = argv[optind - 1];
+//            }
             default:
+//                return 0;
                 break;
         }
     }
