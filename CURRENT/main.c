@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
@@ -178,7 +177,7 @@ void write_png_file(char * file_name, struct Png * image) {
 
 void draw_square(struct Png * image, int x, int y, int l, int t, int * color, int fill, int * colorF) {
     if (x < 0 || y < 0 || l < 0 || t < 0)  {
-        printf("Введены некорретные данные: \n "
+        printf("Введены некорретные данные: "
                "координаты, длина стороны квадрата и ширина линий "
                "не могут иметь отрицательные значения\n");
         return;
@@ -198,11 +197,14 @@ void draw_square(struct Png * image, int x, int y, int l, int t, int * color, in
         printf("Введены некорретные данные: цвета должны лежать от 0 до 255\n");
         return;
     }
-    if (colorF[0] > 255 || colorF[0] < 0 || colorF[1] > 255 || colorF[1] < 0
-        || colorF[2] > 255 || colorF[2] < 0 || colorF[3] > 255 || colorF[3] < 0) {
-        printf("Введены некорретные данные: цвета должны лежать от 0 до 255\n");
-        return;
+    if (fill) {
+        if (colorF[0] > 255 || colorF[0] < 0 || colorF[1] > 255 || colorF[1] < 0
+            || colorF[2] > 255 || colorF[2] < 0 || colorF[3] > 255 || colorF[3] < 0) {
+            printf("Введены некорретные данные: цвета должны лежать от 0 до 255\n");
+            return;
+        }
     }
+
     int x1 = x;
     int y1 = y;
     int x2 = x + l - 1;
@@ -589,7 +591,10 @@ void all_keys(int argc, char *argv[], int* length, int* thickness, int* fill, in
                     break;
                 }
                 *fill = atoi(argv[optind - 1]);
-                if (*fill != 0 && *fill != 1) break;
+                if (*fill != 0 && *fill != 1) {
+                    *fill = 0;
+                    break;
+                }
                 break;
             }
             case 'c': {
