@@ -176,30 +176,6 @@ void write_png_file(char * file_name, struct Png * image) {
     fclose(fp);
 }
 
-//void process_file(struct Png *image) {
-//    int x,y;
-//    if (png_get_color_type(image->png_ptr, image->info_ptr) == PNG_COLOR_TYPE_RGB){
-//        // Some error handling: input file is PNG_COLOR_TYPE_RGB but must be PNG_COLOR_TYPE_RGBA
-//    }
-//
-//    if (png_get_color_type(image->png_ptr, image->info_ptr) != PNG_COLOR_TYPE_RGBA){
-//        // Some error handling: color_type of input file must be PNG_COLOR_TYPE_RGBA
-//    }
-//
-//    for (y = 0; y < image->height; y++) {
-//        png_byte *row = image->row_pointers[y];
-//        for (x = 0; x < image->width; x++) {
-//            png_byte *ptr = &(row[x * 4]);
-////            printf("Pixel at position [ %d - %d ] has RGBA values: %d - %d - %d - %d\n",
-////                   x, y, ptr[0], ptr[1], ptr[2], ptr[3]);
-//
-//            /* set red value to 0 and green value to the blue one */
-//            ptr[0] = 0;
-//            ptr[1] = ptr[2];
-//        }
-//    }
-//}
-
 void draw_square(struct Png * image, int x, int y, int l, int t, int * color, int fill, int * colorF) {
     if (x < 0 || y < 0 || l < 0 || t < 0)  {
         printf("Введены некорретные данные: \n "
@@ -351,11 +327,18 @@ void swap_areas(struct Png * image, int x1, int y1, int x2, int y2, char * type)
         change_frag(image, area_3_x1, area_3_x2, area_3_y1, area_3_y2, 0-h_area, w_area, NULL); // area 3 to area 1
         change_frag(image, area_4_x1, area_4_x2, area_4_y1, area_4_y2, h_area, w_area, save_pix_1); // area 1 (saved) to 4
         change_frag(image, area_2_x1, area_2_x2, area_2_y1, area_2_y2, h_area, w_area, save_pix_3); // area 3 (saved) to 2
-    } else if (!strcasecmp(type, "none")) {
-        printf("Введен некорректный тип swap.\n");
-        return;
     }
 
+    for (int i = 0; i < h_area; i++) {
+        for (int j = 0; j < w_area; j++) {
+            free(save_pix_1[i][j]);
+            free(save_pix_3[i][j]);
+        }
+        free(save_pix_1[i]);
+        free(save_pix_3[i]);
+    }
+    free(save_pix_1);
+    free(save_pix_3);
 }
 
 void change_color(struct Png * image, int * new_color) {
@@ -523,6 +506,10 @@ int main(int argc, char **argv) {
         printf("Неизвестное название опции.\n");
     }
 
+    free(swap_type);
+    free(color);
+    free(color_fill);
+    free(new_file_name);
     return 0;
 }
 
