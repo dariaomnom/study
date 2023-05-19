@@ -203,6 +203,7 @@ void draw_square(struct Png * image, int x, int y, int l, int t, int * color, in
         printf("Введены некорретные данные: цвета должны лежать от 0 до 255\n");
         return;
     }
+    printf("%d\n", __LINE__);
     int x1 = x;
     int y1 = y;
     int x2 = x + l - 1;
@@ -442,22 +443,26 @@ int main(int argc, char **argv) {
     }
     struct Png image;
     read_png_file(argv[1], &image);
+    printf("%d\n", __LINE__);
 
     char * choice = malloc(10 * sizeof(char));
     strcpy(choice, argv[2]);
 
     char * new_file_name = malloc(1024 * sizeof(char));
     strcpy(new_file_name, argv[argc-1]);
+    printf("%d\n", __LINE__);
 
     int length = -1; int thickness = -1;
     int fill = 0; int x1 = -1; int y1 = -1; int x2 = -1; int y2 = -1;
     int * color = calloc(4, sizeof(int)); color[0] = -1; color[1] = -1; color[2] = -1; color[3] = -1;
     int * color_fill = calloc(4, sizeof(int)); color_fill[0] = -1; color_fill[1] = -1; color_fill[2] = -1; color_fill[3] = -1;
     char * swap_type = malloc(10 * sizeof(char)); strcpy(swap_type, "none");
+    printf("%d\n", __LINE__);
 
     all_keys(argc, argv, &length, &thickness, &fill, &x1, &y1, &x2, &y2, &color, &color_fill, &swap_type, &image);
 
     if (!strcasecmp(choice, "square")) {
+        printf("%d\n", __LINE__);
         if ((x1 == -1 || y1 == -1 || length == -1 || thickness == -1 ||
         color[0] == -1 || color[1] == -1 || color[2] == -1 || color[3] == -1) ||
         (fill == 1 && (color_fill[0] == -1 || color_fill[1] == -1 || color_fill[2] == -1 || color_fill[3] == -1))){
@@ -465,8 +470,10 @@ int main(int argc, char **argv) {
                    "Введите параметры -s x.y -l len -t width -c r.g.b.a -f 0/1 -r r.g.b.a \n");
             return 0;
         }
+        printf("%d\n", __LINE__);
         if (fill) draw_square(&image, x1, y1, length, thickness, color, fill, color_fill);
         else draw_square(&image, x1, y1, length, thickness, color, fill, NULL);
+        printf("%d\n", __LINE__);
         write_png_file(new_file_name, &image);
     }
     else if (!strcasecmp(choice, "swap")) {
