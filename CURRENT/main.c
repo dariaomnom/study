@@ -23,17 +23,18 @@ void print_PNG_info(struct Png *image){
     printf("Глубина цвета: %u\n", image->bit_depth);
 }
 
-void print_info(){
-    printf("\nЭто программа с CLI для редактирования png-изображений <з \n"
-           "Поддерживаются файлы с глубиной цвета 8 бит и каналами RGBa\n");
-    printf("Формат ввода:\033[1;35m [./pngedit] [infilename.png] -[o]/--[option] [argument] [outfilename.png]\033[0m\n\n");
+void print_help(){
+    printf("\nЭто программа с CLI для редактирования png-изображений! \n"
+           "Поддерживаются файлы с глубиной цвета 8 бит, RGBa\n");
+    printf("Формат ввода:\033[1;35m [./pngedit] [command] [in.png] -[o]/--[option] [argument] [out.png]\033[0m\n\n");
+    printf("Доступные команды:\n");
 
     printf("[имя файла] \033[1;35msquare\033[0m - нарисовать квадрат\n");
     printf("    -s/--start      [x-координата].[y-координата] - левый верхний угол\n");
     printf("    -l/--length     [число] - длина стороны\n");
     printf("    -t/--thickness  [число] - толщина линий (в пикселях)\n");
     printf("    -c/--color      [R].[G].[B].[A] - числа от 0 до 255, цвет линий\n");
-    printf("    -f/--fill       [число] - заливка (по умолчанию без заливки) (1 - заливка, 0 - нет)\n");
+    printf("    -f/--fill       [число] - опция заливки, по умолчанию без неё (1 - заливка, 0 - нет)\n");
     printf("    -r/--colorfill  [R].[G].[B].[A] - числа от 0 до 255, цвет заливки\n\n");
 
     printf("[имя файла] \033[1;35mswap\033[0m - поменять местами 4 куска области\n");
@@ -42,19 +43,18 @@ void print_info(){
     printf("    -p/-type        [circle / diagonal] - способ (по кругу / по диагонали)\n\n");
 
     printf("[имя файла] \033[1;35moften\033[0m - заменить самый часто встречающийся цвет на новый\n");
-    printf("    -c/--color      [R].[G].[B].[A] - числа, новый цвет (RGBa)\n\n");
+    printf("    -c/--color      [R].[G].[B].[A] - числа от 0 до 255, новый цвет (RGBa)\n\n");
 
     printf("[имя файла] \033[1;35minversion\033[0m - инвертировать цвет в заданной области\n");
     printf("    -s/--start      [x1-координата].[y1-координата] - левый верхний угол\n");
     printf("    -e/--end        [x2-координата].[y2-координата] - правый нижний угол\n\n");
 
-    printf("[имя файла] \033[1;35m-i/--info\033[0m - получить информацию об изображении\n");
-    printf("[имя файла] \033[1;35m-h/--help\033[0m - вызвать справку\n\n");
+    printf("[имя файла] \033[1;35m-i/--info/info\033[0m - получить информацию об изображении\n");
+    printf("[имя файла] \033[1;35m-h/--help/help\033[0m - вызвать справку\n\n");
 }
 
 void read_png_file(char * file_name, struct Png * image) {
     char header[8];
-
     FILE *fp = fopen(file_name, "rb");
     if (!fp){
         printf("Ошибка: не удалось открыть файл для чтения. Введите название файла с расширением '.png'\n");
@@ -118,11 +118,6 @@ void read_png_file(char * file_name, struct Png * image) {
 }
 
 void write_png_file(char * file_name, struct Png * image) {
-//    if (file_name[strlen(file_name)-4] != '.' && file_name[strlen(file_name)-3] != 'p'
-//    && file_name[strlen(file_name)-2] != 'n' && file_name[strlen(file_name)-1] != 'g') {
-//        printf("Ошибка: не передан аргумент для итогового изображения в расширении '.png'.\n");
-//        exit(-1);
-//    }
     if (strstr(file_name, ".png") != &(file_name[strlen(file_name)-4])) {
         printf("Ошибка: не передан аргумент для итогового изображения в расширении '.png'.\n");
         exit(1);
@@ -227,6 +222,11 @@ void draw_square(struct Png * image, int x, int y, int l, int t, int * color, in
         printf("Введены некорретные данные: цвета должны лежать от 0 до 255\n");
         return;
     }
+    if (colorF[0] > 255 || colorF[0] < 0 || colorF[1] > 255 || colorF[1] < 0
+        || colorF[2] > 255 || colorF[2] < 0 || colorF[3] > 255 || colorF[3] < 0) {
+        printf("Введены некорретные данные: цвета должны лежать от 0 до 255\n");
+        return;
+    }
     int x1 = x;
     int y1 = y;
     int x2 = x + l - 1;
@@ -239,8 +239,8 @@ void draw_square(struct Png * image, int x, int y, int l, int t, int * color, in
     for (int i = x1; i <= x2; i++) {
         for (int j = y1; j <= y2; j++) {
             for (int c = 0; c < 4; c++) {
-                if ((j >= y1 && j <= y1+t) || (j <= y2 && j >= y2-t)
-                    || (i >= x1 && i <= x1+t)  || (i <= x2 && i >= x2-t)) {
+                if ((j >= y1 && j < y1+t) || (j <= y2 && j > y2-t)
+                    || (i >= x1 && i < x1+t)  || (i <= x2 && i > x2-t)) {
                     // рисование границ
                     image->row_pointers[j][i * stride + c] = color[c];
                 } else if (fill && (i >= x1+t && i <= x2-t) && (j >= y1+t && j <= y2-t)) {
@@ -359,6 +359,11 @@ void swap_areas(struct Png * image, int x1, int y1, int x2, int y2, char * type)
 }
 
 void change_color(struct Png * image, int * new_color) {
+    if (new_color[0] > 255 || new_color[0] < 0 || new_color[1] > 255 || new_color[1] < 0
+        || new_color[2] > 255 || new_color[2] < 0 || new_color[3] > 255 || new_color[3] < 0) {
+        printf("Введены некорретные данные: цвета должны лежать от 0 до 255\n");
+        return;
+    }
     int number_of_channels = 4;
     int bit_depth = image->bit_depth;
     int stride = number_of_channels * bit_depth / 8;
@@ -417,7 +422,6 @@ void change_color(struct Png * image, int * new_color) {
 }
 
 void invert_colors(struct Png * image, int x1, int y1, int x2, int y2) {
-//    printf("x1 %d y1 %d x2 %d y2 %d\n", x1, y1, x2, y2);
     if (x1 < 0 ||  x1 >= image->width || y1 < 0 || y1 >= image->height
     || x2 < 0 ||  x2 >= image->width || y2 < 0 || y2 >= image->height) {
         printf("Введены некорретные данные: координаты должны "
@@ -432,7 +436,7 @@ void invert_colors(struct Png * image, int x1, int y1, int x2, int y2) {
     int number_of_channels = 4;
     int bit_depth = image->bit_depth;
     int stride = number_of_channels * bit_depth / 8;
-//int stride = 4;
+
     for (int i = x1; i <= x2; i++) {
         for (int j = y1; j <= y2; j++) {
             image->row_pointers[j][i * stride + 0] = 255 - image->row_pointers[j][i * stride + 0];
@@ -444,81 +448,68 @@ void invert_colors(struct Png * image, int x1, int y1, int x2, int y2) {
 }
 
 
-void all_keys(int argc, char *argv[], int* length, int* thickness, int* fill, int* x1, int* y1, int* x2, int* y2, int** color, int** color_fill, char** swap_type);
+void all_keys(int argc, char *argv[], int* length, int* thickness,
+              int* fill, int* x1, int* y1, int* x2, int* y2, int** color,
+              int** color_fill, char** swap_type, struct Png* image);
 
 int main(int argc, char **argv) {
-    if(argc == 1){
-        print_info();
+    if(argc == 1 || argc == 2){
+        print_help();
         return 0;
     }
     struct Png image;
-//    char* output = argv[2];
     read_png_file(argv[1], &image);
 
-    if (argc < 3) {printf("Не введено название опции.\n"); return 0;}
-
-    char *choice = malloc(10 * sizeof(char));
+    char * choice = malloc(10 * sizeof(char));
     strcpy(choice, argv[2]);
 
     char * new_file_name = malloc(1024 * sizeof(char));
     strcpy(new_file_name, argv[argc-1]);
 
     int length = -1; int thickness = -1;
-    int fill = -1; int x1 = -1; int y1 = -1; int x2 = -1; int y2 = -1;
+    int fill = 0; int x1 = -1; int y1 = -1; int x2 = -1; int y2 = -1;
     int * color = calloc(4, sizeof(int)); color[0] = -1; color[1] = -1; color[2] = -1; color[3] = -1;
     int * color_fill = calloc(4, sizeof(int)); color_fill[0] = -1; color_fill[1] = -1; color_fill[2] = -1; color_fill[3] = -1;
-    char * swap_type = malloc(10 * sizeof(char));
+    char * swap_type = malloc(10 * sizeof(char)); strcpy(swap_type, "none");
 
-    opterr = 0;
-    all_keys(argc, argv, &length, &thickness, &fill, &x1, &y1, &x2, &y2, &color, &color_fill, &swap_type);
+    all_keys(argc, argv, &length, &thickness, &fill, &x1, &y1, &x2, &y2, &color, &color_fill, &swap_type, &image);
 
     if (!strcasecmp(choice, "square")) {
-        int flag_err = 0;
-        if (x1 == -1 || y1 == -1 || length == -1 || thickness == -1 ||
-            color[0] == -1 || color[1] == -1 || color[2] == -1 || color[3] == -1) {
-            printf("Введены не все параметры.\n");
-            flag_err = 1;
-        }
-
-        if (flag_err) {
-            if (x1 == -1 || y1 == -1)
-                printf("Неправильно введены координаты.\n");
-            if (length == -1)
-                printf("Неправильно введена длина стороны.\n");
-            if (thickness == -1)
-                printf("Неправильно введена толщина линии.\n");
-            if (color[0] == -1 || color[1] == -1 || color[2] == -1 || color[3] == -1)
-                printf("Неправильно введён цвет линий.\n");
-            if (fill != 1 && fill != 0)
-                printf("Неправильно введён параметр заливки.\n");
-            if (fill && (color_fill[0] == -1 || color_fill[1] == -1 || color_fill[2] == -1 || color_fill[3] == -1))
-                printf("Неправильно введён цвет заливки.\n");
-            else if (!(fill) && (color_fill[0] != -1 || color_fill[1] != -1 || color_fill[2] != -1 || color_fill[3] != -1))
-                printf("Если заливка не нужна, не нужно вводить опцию для цвета заливки.\n");
+        if ((x1 == -1 || y1 == -1 || length == -1 || thickness == -1 ||
+        color[0] == -1 || color[1] == -1 || color[2] == -1 || color[3] == -1) ||
+        (fill == 1 && (color_fill[0] == -1 || color_fill[1] == -1 || color_fill[2] == -1 || color_fill[3] == -1))){
+            printf("Ошибки во вводе параметров. \n"
+                   "Введите параметры -s x.y -l len -t width -c r.g.b.a -f 0/1 -r r.g.b.a \n");
             return 0;
-        } else {
-            if (fill) draw_square(&image, x1, y1, length, thickness, color, fill, color_fill);
-            else draw_square(&image, x1, y1, length, thickness, color, fill, NULL);
-            write_png_file(new_file_name, &image);
         }
+        if (fill) draw_square(&image, x1, y1, length, thickness, color, fill, color_fill);
+        else draw_square(&image, x1, y1, length, thickness, color, fill, NULL);
+        write_png_file(new_file_name, &image);
     }
-
     else if (!strcasecmp(choice, "swap")) {
-//        printf("x1 %d y1 %d x2 %d y2 %d type %s\n", x1,y1,x2,y2,swap_type);
         if ((x1 == -1 || y1 == -1 || x2 == -1 || y2 == -1) || !strcasecmp(swap_type, "none")) {
-            printf("Неправильно введены координаты или тип смены местами областей.\n");
+            printf("Неправильно введены координаты или тип смены местами областей.\n"
+                   "Введите параметры -s x.y -e x.y -p circle/diagonal \n");
             return 0;
         }
         swap_areas(&image, x1, y1, x2, y2, swap_type);
         write_png_file(new_file_name, &image);
     }
-
     else if (!strcasecmp(choice, "often")){
+        if (color[0] == -1 || color[1] == -1 || color[2] == -1 || color[3] == -1) {
+            printf("Неправильно введён новый цвет.\n"
+                   "Введите параметр -c r.g.b.a \n");
+            return 0;
+        }
         change_color(&image, color);
         write_png_file(argv[argc-1], &image);
     }
-
-    else if (!strcasecmp(choice, "inversion")){
+    else if (!strcasecmp(choice, "inversion")) {
+        if ((x1 == -1 || y1 == -1 || x2 == -1 || y2 == -1)) {
+            printf("Неправильно введены координаты.\n"
+                   "Введите параметры -s x.y -e x.y \n");
+            return 0;
+        }
         invert_colors(&image, x1, y1, x2, y2);
         write_png_file(argv[argc-1], &image);
     }
@@ -526,41 +517,42 @@ int main(int argc, char **argv) {
         print_PNG_info(&image);
     }
     else if (!strcasecmp(choice, "help")){
-        print_info();
+        print_help();
     }
-    else printf("Неизвестное название опции.\n");
+    else if (strcasecmp(choice, "help") && strcasecmp(choice, "-h") && strcasecmp(choice, "--help") && strcasecmp(choice, "info") && strcasecmp(choice, "-i") && strcasecmp(choice, "--info")) {
+        printf("Неизвестное название опции.\n");
+    }
 
     return 0;
 }
 
-void all_keys(int argc, char *argv[],
-                int* length, int* thickness,
-                int* fill, int* x1, int* y1, int* x2, int* y2,
-                int** color, int** color_fill, char** swap_type){
+void all_keys(int argc, char *argv[], int* length, int* thickness, int* fill, int* x1, int* y1, int* x2, int* y2,
+                int** color, int** color_fill, char** swap_type, struct Png* image){
     struct option long_opts[] = {
             {"info", no_argument, NULL, 'i'},
             {"help", no_argument, NULL, 'h'},
+            {"start", required_argument, NULL, 's'},
+            {"end", required_argument, NULL, 'e'},
             {"length", required_argument, NULL, 'l'},
             {"thinkness", required_argument, NULL, 't'},
             {"fill", required_argument, NULL, 'f'},
-            {"start", required_argument, NULL, 's'},
-            {"end", required_argument, NULL, 'e'},
             {"color", required_argument, NULL, 'c'},
             {"colorfill", required_argument, NULL, 'r'},
             {"type", required_argument, NULL, 'p'},
             {NULL, 0, NULL, 0}
     };
-    char *short_opts = "ihl:t:f:s:e:c:r:p:";
+    char *short_opts = "ihs:e:l:t:f:c:r:p:";
     int opt;
 
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1){
         switch (opt){
+            case 'i':
+                print_PNG_info(image);
+                break;
+            case 'h':
+                print_help();
+                break;
             case 's': {
-//                if (!optarg) {
-//                    puts("Error of input args");
-//                    exit(1);
-//                }
-
                 int ind = optind - 1;
                 int arg_len = strlen(argv[ind]);
                 if (!isdigit(argv[ind][0])) break;
@@ -588,9 +580,8 @@ void all_keys(int argc, char *argv[],
             }
             case 'l': {
                 int ind = optind - 1;
-                int arg_len = strlen(argv[ind]);
                 if (!isdigit(argv[ind][0])) {
-//                    optind--;
+                    optind--;
                     break;
                 }
                 *length = atoi(argv[ind]);
@@ -598,9 +589,8 @@ void all_keys(int argc, char *argv[],
             }
             case 't': {
                 int ind = optind - 1;
-                int arg_len = strlen(argv[ind]);
                 if (!isdigit(argv[ind][0])) {
-//                    optind--;
+                    optind--;
                     break;
                 }
                 *thickness = atoi(argv[ind]);
@@ -608,7 +598,7 @@ void all_keys(int argc, char *argv[],
             }
             case 'f': {
                 if (!isdigit(argv[optind - 1][0])) {
-//                    optind--;
+                    optind--;
                     break;
                 }
                 *fill = atoi(argv[optind - 1]);
@@ -619,10 +609,7 @@ void all_keys(int argc, char *argv[],
                 int ind = optind - 1;
                 int arg_len = strlen(argv[ind]);
 
-                if (!isdigit(argv[ind][0])) {
-//                    optind--;
-                    break;
-                }
+                if (!isdigit(argv[ind][0])) break;
                 (*color)[0] = atoi(argv[ind]);
 
                 int i = 0;
@@ -653,10 +640,7 @@ void all_keys(int argc, char *argv[],
                 int ind = optind - 1;
                 int arg_len = strlen(argv[ind]);
 
-                if (!isdigit(argv[ind][0])) {
-//                        optind--;
-                    break;
-                }
+                if (!isdigit(argv[ind][0])) break;
                 (*color_fill)[0] = atoi(argv[ind]);
 
                 int i = 0;
@@ -685,7 +669,7 @@ void all_keys(int argc, char *argv[],
             }
             case 'p': {
                 strcpy(*swap_type, argv[optind - 1]);
-                if (strcasecmp(*swap_type, "circle")!=0 && strcasecmp(*swap_type, "diagonal")!=0) {
+                if (strcasecmp(*swap_type, "circle") != 0 && strcasecmp(*swap_type, "diagonal") != 0) {
                     strcpy(*swap_type, "none");
                 }
                 break;
