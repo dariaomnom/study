@@ -370,9 +370,9 @@ void change_color(struct Png * image, int * new_color) {
 
     int *** colors = calloc(256, sizeof(int**));
     for (int i = 0; i < 256; i++) {
-        colors[i] = calloc(256, sizeof(int**));
+        colors[i] = calloc(256, sizeof(int*));
         for (int j = 0; j < 256; j++) {
-            colors[i][j] = calloc(256, sizeof(int*));
+            colors[i][j] = calloc(256, sizeof(int));
         }
     }
 
