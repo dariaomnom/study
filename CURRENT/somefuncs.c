@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
@@ -438,6 +437,191 @@ void all_keys(int argc, char *argv[], int* length, int* thickness,
               int* fill, int* x1, int* y1, int* x2, int* y2, int** color,
               int** color_fill, char** swap_type, struct Png* image);
 
+#include <math.h>
+
+void line(struct Png * image, int x0, int y0, int x1, int y1, int t, int * color) {
+    int deltax = abs(x1 - x0);
+    int deltay = abs(y1 - y0);
+    int error = 0;
+    int deltaerr = (deltay + 1);
+    int y = y0;
+    int diry = y1 - y0;
+    if (diry > 0) diry = 1;
+    if (diry < 0) diry = -1;
+    for (int x = x0; x <= x1; x++) {
+        png_bytep row = image->row_pointers[y];
+        png_bytep ptr = &(row[x * 4]);
+        ptr[0] = color[0];
+        ptr[1] = color[1];
+        ptr[2] = color[2];
+        ptr[3] = color[3];
+        for (int i = 0; i < t-1; i++) {
+            png_bytep row2 = image->row_pointers[y+i];
+            png_bytep ptr2 = &(row2[x * 4]);
+            ptr2[0] = color[0];
+            ptr2[1] = color[1];
+            ptr2[2] = color[2];
+            ptr2[3] = color[3];
+        }
+        error = error + deltaerr;
+        if (error >= (deltax + 1)) {
+            y = y + diry;
+            error = error - (deltax + 1);
+        }
+    }
+
+}
+
+void circle(struct Png * image, int X1, int Y1, int R, int t, int * color) {
+    int x = 0;
+    int y = R;
+    int delta = 1 - 2 * R;
+    int error = 0;
+    while (y >= x) {
+        for (int c = 0; c < 4; c++) {
+            image->row_pointers[Y1 + y][(X1 + x) * 4] = color[c];
+            image->row_pointers[Y1 - y][(X1 + x) * 4] = color[c];
+            image->row_pointers[Y1 + y][(X1 - x) * 4] = color[c];
+            image->row_pointers[Y1 - y][(X1 - x) * 4] = color[c];
+            image->row_pointers[Y1 + x][(X1 + y) * 4] = color[c];
+            image->row_pointers[Y1 - x][(X1 + y) * 4] = color[c];
+            image->row_pointers[Y1 + x][(X1 - y) * 4] = color[c];
+            image->row_pointers[Y1 - x][(X1 - y) * 4] = color[c];
+        }
+        error = 2 * (delta + y) - 1;
+        if ((delta < 0) && (error <= 0)) {
+            delta += 2 * ++x + 1;
+            continue;
+        }
+        if ((delta > 0) && (error > 0)) {
+            delta -= 2 * --y + 1;
+            continue;
+        }
+        delta += 2 * (++x - --y);
+    }
+}
+
+int draw_line (struct Png *img, int x00, int y00, int x11, int y11, int color[4], int width)
+{
+    if (width < 0)
+    {
+//        fprintf(stderr, coordinates_error);
+        return 1; }
+    for (int i = 0; i < width; i++)
+    {
+        int x0, x1, y0, y1;
+        if (abs(x11 - x00) < abs(y11 - y00))
+        {
+            x0 = x00 + i;
+            x1 = x11 + i;
+            y1 = y11;
+            y0 = y00;
+        } else
+        {
+            x0 = x00;
+            x1 = x11;
+            y1 = y11 + i;
+            y0 = y00 + i;
+        }
+//        if (MIN(x0, x1) < 0 || MIN(y0, y1) < 0 || MAX(x0, x1) >= img- >width || MAX(y0, y1) >= img->height)
+//        {
+////            fprintf(stderr, coordinates_error);
+//            return 1; }
+        int dx = abs(x1 - x0);
+        int dy = abs(y1 - y0);
+        int sx, sy;
+        if (x0 < x1)
+        {
+            sx = 1;
+        } else
+        {
+            sx = -1;
+        }
+        if (y0 < y1)
+        {
+            sy = 1;
+        } else
+        {
+            sy = -1;
+        }
+        int err = dx - dy;
+        while (1)
+        {
+            png_bytep row = img->row_pointers[y0];
+            png_bytep px = &(row[x0 * 4]);
+            px[0] = color[0];
+            px[1] = color[1];
+            px[2] = color[2];
+            if (x0 == x1 && y0 == y1)
+                break;
+            int e2 = 2 * err;
+            if (e2 > -dy)
+            {
+                err -= dy;
+                x0 += sx; }
+            if (e2 < dx)
+            {
+                err += dx;
+                y0 += sy; }
+        } }
+    return 0;
+}
+
+void sq_red(struct Png * image, struct Png * image_red, int l) {
+    int number_of_channels = 4;
+    int bit_depth = image->bit_depth;
+    int stride = number_of_channels * bit_depth / 8;
+    int red[] = {255,255,0,255};
+
+    for (int y = 0; y < image->height; y++) {
+        png_bytep row = image->row_pointers[y];
+        for (int x = 0; x < image->width; x++) {
+            png_bytep ptr = &(row[x * stride]);
+// 16 45 0
+// 167 1 9
+            if (ptr[0] == 255 && ptr[1] == 0 && ptr[2] == 0) {
+                for (int j = y-l/2; j <= y+l/2; j++) {
+                    for (int i = x-l/2; i <= x+l/2; i++) {
+                        if (((j == y-l/2) || (j == y+l/2)
+                         || (i == x-l/2)  || (i == x+l/2))
+                         && i >= 0 && i < image->width && j >= 0 && j < image->height) {
+                            png_bytep row2 = image_red->row_pointers[j];
+                            png_bytep ptr2 = &(row2[i * stride]);
+                            ptr2[0] = 255;
+                            ptr2[1] = 255;
+                            ptr2[2] = 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+void merge(struct Png * image, struct Png * image2, 1, struct Png * image_res) {
+
+    image_res->width = image_res->width * 2;
+    image_res->height = image_res->height;
+
+    png_read_update_info(image_res->png_ptr, image_res->info_ptr);
+
+//    image_res->row_pointers = (png_bytep *) malloc(sizeof(png_bytep) * image_res->height);
+    for (int y = 0; y < image_res->height; y++)
+    image_res->row_pointers[y] = (png_byte *) realloc(image_res->row_pointers[y], png_get_rowbytes(image_res->png_ptr, image_res->info_ptr));
+
+int number_of_channels = 4;
+int bit_depth = image->bit_depth;
+int stride = number_of_channels * bit_depth / 8;
+
+    for (int y = 0; y < image->height; y++) {
+        for (int x = 0; x < image->width; x++) {
+            png_bytep row = image->row_pointers[y];
+            png_bytep ptr = &(row[x * stride]);
+        }
+    }
+}
+
 int main(int argc, char **argv) {
     if(argc == 1 || argc == 2){
         print_help();
@@ -446,12 +630,50 @@ int main(int argc, char **argv) {
     struct Png image;
     read_png_file(argv[1], &image);
 
+//    /*
+//    int color_line[] = {255, 0, 0, 255};
+// рисование любого отрезка алгоритмом брехентхема
+//    line(&image, 100, 100, 200, 150, 10, color_line);
+// рисование окружности (правда только тонкой)
+//    circle(&image, 400, 400, 200, 10, color_line);
+//     */
+
+// функция ильи к. для рисования толстой линии
+//    draw_line (&image, 200, 200, 200, 700, color_line, 10);
+//    draw_line (&image, 200, 700, 400, 300, color_line, 10);
+//    draw_line (&image, 400, 300, 200, 200, color_line, 10);
+
+    struct Png image2;
+    read_png_file(argv[2], &image2);
+    struct Png image_res;
+    read_png_file(argv[2], &image_res);
+
+    // начала писать функцию для объединения картинок по ширине
+    merge(&image, &image2, 1, &image_res);
+
+
+///*
+//    struct Png image_red;
+//    read_png_file(argv[1], &image_red);
+
+// вокруг каждого пикселя красного цвета (мб я что-то поменяла но там это легко изменить) нарисовать квадрат
+//    sq_red(&image, &image_red, 10);
+//    */
+//    write_png_file(new_file_name, &image_red);
+
+
+// не трогать ++
     char * choice = malloc(10 * sizeof(char));
     strcpy(choice, argv[2]);
 
     char * new_file_name = malloc(1024 * sizeof(char));
     strcpy(new_file_name, argv[argc-1]);
+// не трогать --
 
+    write_png_file(new_file_name, &image);
+//    write_png_file(new_file_name, &image_red);
+
+// не трогать ++
     int length = -1; int thickness = -1;
     int fill = 0; int x1 = -1; int y1 = -1; int x2 = -1; int y2 = -1;
     int * color = calloc(4, sizeof(int)); color[0] = -1; color[1] = -1; color[2] = -1; color[3] = -1;
@@ -488,7 +710,7 @@ int main(int argc, char **argv) {
             return 0;
         }
         change_color(&image, color);
-        write_png_file(new_file_name, &image);
+        write_png_file(argv[argc-1], &image);
     }
     else if (!strcasecmp(choice, "inversion")) {
         if ((x1 == -1 || y1 == -1 || x2 == -1 || y2 == -1)) {
@@ -497,7 +719,7 @@ int main(int argc, char **argv) {
             return 0;
         }
         invert_colors(&image, x1, y1, x2, y2);
-        write_png_file(new_file_name, &image);
+        write_png_file(argv[argc-1], &image);
     }
     else if (!strcasecmp(choice, "info")){
         print_PNG_info(&image);
