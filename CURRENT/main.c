@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 #include <getopt.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,7 +40,7 @@ void print_help(){
     printf("[имя файла] \033[1;35mswap\033[0m - поменять местами 4 куска области\n");
     printf("    -s/--start      [x1-координата].[y1-координата] - левый верхний угол\n");
     printf("    -e/--end        [x2-координата].[y2-координата] - правый нижний угол\n");
-    printf("    -p/-type        [circle / diagonal] - способ (по кругу / по диагонали)\n\n");
+    printf("    -p/--type        [circle / diagonal] - способ (по кругу / по диагонали)\n\n");
 
     printf("[имя файла] \033[1;35moften\033[0m - заменить самый часто встречающийся цвет на новый\n");
     printf("    -c/--color      [R].[G].[B].[A] - числа от 0 до 255, новый цвет (RGBa)\n\n");
@@ -487,7 +488,7 @@ int main(int argc, char **argv) {
             return 0;
         }
         change_color(&image, color);
-        write_png_file(argv[argc-1], &image);
+        write_png_file(new_file_name, &image);
     }
     else if (!strcasecmp(choice, "inversion")) {
         if ((x1 == -1 || y1 == -1 || x2 == -1 || y2 == -1)) {
@@ -496,7 +497,7 @@ int main(int argc, char **argv) {
             return 0;
         }
         invert_colors(&image, x1, y1, x2, y2);
-        write_png_file(argv[argc-1], &image);
+        write_png_file(new_file_name, &image);
     }
     else if (!strcasecmp(choice, "info")){
         print_PNG_info(&image);
