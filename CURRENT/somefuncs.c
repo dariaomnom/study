@@ -39,7 +39,7 @@ void print_help(){
     printf("[имя файла] \033[1;35mswap\033[0m - поменять местами 4 куска области\n");
     printf("    -s/--start      [x1-координата].[y1-координата] - левый верхний угол\n");
     printf("    -e/--end        [x2-координата].[y2-координата] - правый нижний угол\n");
-    printf("    -p/--type        [circle / diagonal] - способ (по кругу / по диагонали)\n\n");
+    printf("    -p/--type       [circle / diagonal] - способ (по кругу / по диагонали)\n\n");
 
     printf("[имя файла] \033[1;35moften\033[0m - заменить самый часто встречающийся цвет на новый\n");
     printf("    -c/--color      [R].[G].[B].[A] - числа от 0 до 255, новый цвет (RGBa)\n\n");
@@ -501,52 +501,37 @@ void circle(struct Png * image, int X1, int Y1, int R, int t, int * color) {
     }
 }
 
-int draw_line (struct Png *img, int x00, int y00, int x11, int y11, int color[4], int width)
+int lline (struct Png *img, int x00, int y00, int x11, int y11, int color[4], int width)
 {
-    if (width < 0)
-    {
-//        fprintf(stderr, coordinates_error);
-        return 1; }
-    for (int i = 0; i < width; i++)
-    {
+    for (int i = 0; i < width; i++){
         int x0, x1, y0, y1;
-        if (abs(x11 - x00) < abs(y11 - y00))
-        {
+        if (abs(x11 - x00) < abs(y11 - y00)){
             x0 = x00 + i;
             x1 = x11 + i;
             y1 = y11;
             y0 = y00;
-        } else
-        {
+        } else{
             x0 = x00;
             x1 = x11;
             y1 = y11 + i;
             y0 = y00 + i;
         }
-//        if (MIN(x0, x1) < 0 || MIN(y0, y1) < 0 || MAX(x0, x1) >= img- >width || MAX(y0, y1) >= img->height)
-//        {
-////            fprintf(stderr, coordinates_error);
-//            return 1; }
+
         int dx = abs(x1 - x0);
         int dy = abs(y1 - y0);
         int sx, sy;
-        if (x0 < x1)
-        {
+        if (x0 < x1){
             sx = 1;
-        } else
-        {
+        } else{
             sx = -1;
         }
-        if (y0 < y1)
-        {
+        if (y0 < y1){
             sy = 1;
-        } else
-        {
+        } else{
             sy = -1;
         }
         int err = dx - dy;
-        while (1)
-        {
+        while (1){
             png_bytep row = img->row_pointers[y0];
             png_bytep px = &(row[x0 * 4]);
             px[0] = color[0];
@@ -555,12 +540,10 @@ int draw_line (struct Png *img, int x00, int y00, int x11, int y11, int color[4]
             if (x0 == x1 && y0 == y1)
                 break;
             int e2 = 2 * err;
-            if (e2 > -dy)
-            {
+            if (e2 > -dy){
                 err -= dy;
                 x0 += sx; }
-            if (e2 < dx)
-            {
+            if (e2 < dx){
                 err += dx;
                 y0 += sy; }
         } }
@@ -814,6 +797,172 @@ void merge(struct Png * image, struct Png * image2, int t, struct Png * image_re
 //    return copy;
 //}
 
+void border(struct Png * orig, struct Png * copy, int t, int * color) {
+    copy->height += (t * 2);
+    copy->width += (t * 2);
+
+    png_bytep * rows = (png_bytep *) malloc(sizeof(png_bytep) * copy->height);
+    for (int y = 0; y < copy->height; y++)
+        rows[y] = (png_byte *) malloc(copy->width * 4 * sizeof(png_byte));
+    copy->row_pointers = rows;
+
+    for (int y = 0, y_new = t; y < orig->height && y_new < copy->height-t; y++, y_new++) {
+        png_bytep row = orig->row_pointers[y];
+        png_bytep row_new = copy->row_pointers[y_new];
+        for (int x = 0, x_new = t; x < orig->width && x_new < copy->width-t; x++, x_new++) {
+            png_bytep ptr = &(row[x * 4]);
+            png_bytep ptr_new = &(row_new[x_new * 4]);
+            ptr_new[0] = ptr[0];
+            ptr_new[1] = ptr[1];
+            ptr_new[2] = ptr[2];
+            ptr_new[3] = ptr[3];
+        }
+    }
+    for (int y = 0; y < copy->height; y++) {
+        png_bytep row = copy->row_pointers[y];
+        for (int x = 0; x < copy->width; x++) {
+            png_bytep ptr = &(row[x * 4]);
+            if ((y < t || y >= copy->height - t) || (x < t || x >= copy->width - t)) {
+                ptr[0] = color[0];
+                ptr[1] = color[1];
+                ptr[2] = color[2];
+                ptr[3] = color[3];
+            }
+        }
+    }
+}
+
+void white_areas(struct Png * image, struct Png * copy, int * color) {
+    for (int y = 1; y < image->height-1; y++) {
+        png_bytep row = image->row_pointers[y];
+        png_bytep row_c = copy->row_pointers[y];
+        for (int x = 1; x < image->width-1; x++) {
+            png_bytep ptr = &(row[x * 4]);
+            png_bytep ptr_c = &(row_c[x * 4]);
+//            if (ptr[0] == 255 && ptr[1] == 255 && ptr[2] == 255) {
+            if (image->row_pointers[y][x * 4 + 0] == 255 && image->row_pointers[y][x * 4 + 1] == 255 && image->row_pointers[y][x * 4 + 2] == 255 ) {
+                if ((image->row_pointers[y-1][(x-1) * 4 + 0] != 255) && (image->row_pointers[y-1][(x-1) * 4 + 1] != 255) && (image->row_pointers[y-1][(x-1) * 4 + 2] != 255)) {
+                    copy->row_pointers[y-1][(x-1) * 4 + 0] = color[0];
+                    copy->row_pointers[y-1][(x-1) * 4 + 1] = color[1];
+                    copy->row_pointers[y-1][(x-1) * 4 + 2] = color[2];
+                    printf("%d %d\n", x, y);
+                }
+
+                if ((image->row_pointers[y-1][(x) * 4 + 0] != 255) && (image->row_pointers[y-1][(x) * 4 + 1] != 255) && (image->row_pointers[y-1][(x) * 4 + 2] != 255)) {
+                    copy->row_pointers[y-1][(x) * 4 + 0] = color[0];
+                    copy->row_pointers[y-1][(x) * 4 + 1] = color[1];
+                    copy->row_pointers[y-1][(x) * 4 + 2] = color[2];
+                    printf("%d %d\n", x, y);
+                }
+
+                if ((image->row_pointers[y-1][(x+1) * 4 + 0] != 255) && (image->row_pointers[y-1][(x+1) * 4 + 1] != 255) && (image->row_pointers[y-1][(x+1) * 4 + 2] != 255)) {
+                    copy->row_pointers[y-1][(x+1) * 4 + 0] = color[0];
+                    copy->row_pointers[y-1][(x+1) * 4 + 1] = color[1];
+                    copy->row_pointers[y-1][(x+1) * 4 + 2] = color[2];
+                    printf("%d %d\n", x, y);
+                }
+
+                if ((image->row_pointers[y][(x+1) * 4 + 0] != 255) && (image->row_pointers[y][(x+1) * 4 + 1] != 255) && (image->row_pointers[y][(x+1) * 4 + 2] != 255)) {
+                    copy->row_pointers[y][(x+1) * 4 + 0] = color[0];
+                    copy->row_pointers[y][(x+1) * 4 + 1] = color[1];
+                    copy->row_pointers[y][(x+1) * 4 + 2] = color[2];
+                }
+
+                if ((image->row_pointers[y+1][(x+1) * 4 + 0] != 255) && (image->row_pointers[y+1][(x+1) * 4 + 1] != 255) && (image->row_pointers[y+1][(x+1) * 4 + 2] != 255)) {
+                    copy->row_pointers[y+1][(x+1) * 4 + 0] = color[0];
+                    copy->row_pointers[y+1][(x+1) * 4 + 1] = color[1];
+                    copy->row_pointers[y+1][(x+1) * 4 + 2] = color[2];
+                }
+
+                if ((image->row_pointers[y+1][(x) * 4 + 0] != 255) && (image->row_pointers[y+1][(x) * 4 + 1] != 255) && (image->row_pointers[y+1][(x) * 4 + 2] != 255)) {
+                    copy->row_pointers[y+1][(x) * 4 + 0] = color[0];
+                    copy->row_pointers[y+1][(x) * 4 + 1] = color[1];
+                    copy->row_pointers[y+1][(x) * 4 + 2] = color[2];
+                }
+
+                if ((image->row_pointers[y+1][(x-1) * 4 + 0] != 255) && (image->row_pointers[y+1][(x-1) * 4 + 1] != 255) && (image->row_pointers[y+1][(x-1) * 4 + 2] != 255)) {
+                    copy->row_pointers[y+1][(x-1) * 4 + 0] = color[0];
+                    copy->row_pointers[y+1][(x-1) * 4 + 1] = color[1];
+                    copy->row_pointers[y+1][(x-1) * 4 + 2] = color[2];
+                }
+
+                if ((image->row_pointers[y][(x-1) * 4 + 0] != 255) && (image->row_pointers[y][(x-1) * 4 + 1] != 255) && (image->row_pointers[y][(x-1) * 4 + 2] != 255)) {
+                    copy->row_pointers[y][(x-1) * 4 + 0] = color[0];
+                    copy->row_pointers[y][(x-1) * 4 + 1] = color[1];
+                    copy->row_pointers[y][(x-1) * 4 + 2] = color[2];
+                }
+            }
+        }
+    }
+}
+
+//void copycopy(struct Png * image, struct Png * copy, int x1, int y1, int x2, int y2) {
+//    png_bytep ** save = save_area(image, x1, x2, y1, y2);
+//    int x_area = 0;
+//    int y_area = 0;
+//    for (int y = 0; y < copy->height; y++) {
+//        png_bytep row = copy->row_pointers[y];
+//        for (int x = 0; x < copy->width; x++) {
+//            png_bytep ptr = &(row[x*4]);
+//            if (x_area == x2-x1+1) x_area = 0;
+//            if (y_area == y2-y1+1) y_area = 0;
+//            ptr[0] = save[y_area][x_area][0];
+//            ptr[1] = save[y_area][x_area][1];
+//            ptr[2] = save[y_area][x_area][2];
+//            ptr[3] = save[y_area][x_area][3];
+//            x_area++;
+//            y_area++;
+//        }
+//    }
+//}
+ //
+
+
+
+void most_image(struct Png * image, int to_x1, int to_x2, int to_y1, int to_y2, int h, int w, png_bytep ** save) {
+    int number_of_channels = 4;
+    int bit_depth = image->bit_depth;
+    int stride = number_of_channels * bit_depth / 8;
+
+    if (!save) {
+        for (int y = to_y1; y <= to_y2; y++) {
+            png_byte *row_to = image->row_pointers[y];
+            png_byte *row_from = image->row_pointers[y + h];
+            for (int x = to_x1; x <= to_x2; x++) {
+                png_byte *ptr_to = &(row_to[x * stride]);
+                png_byte *ptr_from = &(row_from[(x + w) * stride]);
+                ptr_to[0] = ptr_from[0];
+                ptr_to[1] = ptr_from[1];
+                ptr_to[2] = ptr_from[2];
+                ptr_to[3] = ptr_from[3];
+            }
+        }
+    } else {
+        for (int y = to_y1, y_save = 0; y <= to_y2 && y_save <= h && y < image->height; y++, y_save++) {
+            png_byte *row = image->row_pointers[y];
+            for (int x = to_x1, x_save = 0; x <= to_x2 && x_save <= w && x < image->width; x++, x_save++) {
+                png_byte *ptr2 = &(row[x * stride]);
+                ptr2[0] = save[y_save][x_save][0];
+                ptr2[1] = save[y_save][x_save][1];
+                ptr2[2] = save[y_save][x_save][2];
+                ptr2[3] = save[y_save][x_save][3];
+            }
+        }
+    }
+}
+
+void most_area(struct Png * image, int x1, int y1, int x2, int y2){
+    int width_area = x2 - x1;
+    int height_area = y2 - y1;
+    png_bytep ** save = save_area(image, x1, x2, y1, y2);
+
+    for (int y = 0; y < image->height; y+=height_area){
+        for (int x = 0; x < image->width; x+=width_area){
+            most_image(image, x, x+width_area, y, y + height_area, height_area, width_area, save);
+        }
+    }
+}
+
 int main(int argc, char **argv) {
     if(argc == 1 || argc == 2){
         print_help();
@@ -822,33 +971,47 @@ int main(int argc, char **argv) {
     struct Png image;
     read_png_file(argv[1], &image);
 
+// замостить
+    struct Png copy;
+    read_png_file(argv[1], &copy);
+
+    // з и
+    most_area(&image, 200, 200, 550, 550);
+
+    // б о
+//    struct Png copy;
+//    read_png_file(argv[1], &copy);
+//    int color_white[] = {100, 60, 160, 100};
+//    white_areas(&image, &copy, color_white);
+    // р в и
+//    struct Png copy;
+//    read_png_file(argv[1], &copy);
+//    int color_bord[] = {100, 60, 160, 100};
+//    border(&copy, &image, 20, color_bord);
+
 //    /*
 //    int color_line[] = {255, 0, 0, 255};
-// рисование любого отрезка алгоритмом брехентхема
+// ал брез
 //    line(&image, 100, 100, 200, 150, 10, color_line);
-// рисование окружности (правда только тонкой)
+// ок
 //    circle(&image, 400, 400, 200, 10, color_line);
 //     */
 
-// функция ильи к. для рисования толстой линии
-//    draw_line (&image, 200, 200, 200, 700, color_line, 10);
-//    draw_line (&image, 200, 700, 400, 300, color_line, 10);
-//    draw_line (&image, 400, 300, 200, 200, color_line, 10);
+// об
+//    struct Png image2;
+//    read_png_file(argv[2], &image2);
+//    struct Png image_res;
+//    read_png_file(argv[2], &image_res);
 
-    struct Png image2;
-    read_png_file(argv[2], &image2);
-    struct Png image_res;
-    read_png_file(argv[2], &image_res);
-
-    // начала писать функцию для объединения картинок по ширине
-    merge(&image, &image2, 1, &image_res);
+    // об по ш
+//    merge(&image, &image2, 1, &image_res);
 
 
 ///*
 //    struct Png image_red;
 //    read_png_file(argv[1], &image_red);
 
-// вокруг каждого пикселя красного цвета (мб я что-то поменяла но там это легко изменить) нарисовать квадрат
+// к ц
 //    sq_red(&image, &image_red, 10);
 //    */
 //    write_png_file(new_file_name, &image_red);
@@ -862,8 +1025,12 @@ int main(int argc, char **argv) {
     strcpy(new_file_name, argv[argc-1]);
 // не трогать --
 
-    write_png_file(new_file_name, &image_res);
+    write_png_file(new_file_name, &image);
 //    write_png_file(new_file_name, &image_red);
+// б о и р
+//    write_png_file(new_file_name, &copy);
+
+
 
 // не трогать ++
     int length = -1; int thickness = -1;
@@ -876,8 +1043,8 @@ int main(int argc, char **argv) {
 
     if (!strcasecmp(choice, "square")) {
         if ((x1 == -1 || y1 == -1 || length == -1 || thickness == -1 ||
-        color[0] == -1 || color[1] == -1 || color[2] == -1 || color[3] == -1) ||
-        (fill == 1 && (color_fill[0] == -1 || color_fill[1] == -1 || color_fill[2] == -1 || color_fill[3] == -1))){
+             color[0] == -1 || color[1] == -1 || color[2] == -1 || color[3] == -1) ||
+            (fill == 1 && (color_fill[0] == -1 || color_fill[1] == -1 || color_fill[2] == -1 || color_fill[3] == -1))){
             printf("Ошибки во вводе параметров. \n"
                    "Введите параметры -s x.y -l len -t width -c r.g.b.a -f 0/1 -r r.g.b.a \n");
             return 0;
@@ -902,7 +1069,7 @@ int main(int argc, char **argv) {
             return 0;
         }
         change_color(&image, color);
-        write_png_file(argv[argc-1], &image);
+        write_png_file(new_file_name, &image);
     }
     else if (!strcasecmp(choice, "inversion")) {
         if ((x1 == -1 || y1 == -1 || x2 == -1 || y2 == -1)) {
@@ -911,7 +1078,7 @@ int main(int argc, char **argv) {
             return 0;
         }
         invert_colors(&image, x1, y1, x2, y2);
-        write_png_file(argv[argc-1], &image);
+        write_png_file(new_file_name, &image);
     }
     else if (!strcasecmp(choice, "info")){
         print_PNG_info(&image);
