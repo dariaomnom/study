@@ -539,12 +539,14 @@ void merge(struct Png * image, struct Png * image2, int t, struct Png * image_re
     struct Png * max;
 //    image_res->width = image2->width;
     if (image->width < image2->width) {
-        image_res->width = image2->width;
+//        image_res->width = image2->width * 2;
+        image_res->width = image->width;
         w_min = image->width;
         min = image;
         max = image2;
     } else {
-        image_res->width = image->width;
+//        image_res->width = image->width * 2;
+        image_res->width = image2->width;
         w_min = image2->width;
         min = image2;
         max = image;
@@ -552,10 +554,12 @@ void merge(struct Png * image, struct Png * image2, int t, struct Png * image_re
 
 //    image_res->height = image_res->height;
     if (image->height < image2->height) {
-        image_res->height = image2->height;
+//        image_res->height = image2->height * 2;
+        image_res->height = image->height;
         h_min = image->height;
     } else {
-        image_res->height = image->height;
+//        image_res->height = image->height * 2;
+        image_res->height = image2->height;
         h_min = image2->height;
     }
 
@@ -609,37 +613,59 @@ void merge(struct Png * image, struct Png * image2, int t, struct Png * image_re
 
         x_img = 0;
         for (x = 0, x_img = 0; x < image_res->width; x++, x_img++) {
-
+            printf(">>> %d\n", __LINE__);
             if (h_min > y && w_min > x) {
                 png_bytep row_res = image_res->row_pointers[y];
                 png_bytep ptr_res = &(row_res[x * stride]);
                 png_bytep row1;
                 png_bytep ptr1;
+                printf(">>> %d\n", __LINE__);
                 if ((x + y) % 2 == 0) {
-                    row1 = image->row_pointers[y];
+                    row1 = max->row_pointers[y];
                     ptr1 = &(row1[x_img * stride]);
+                    printf(">>> %d\n", __LINE__);
                 } else {
-                    row1 = image2->row_pointers[y];
+                    row1 = min->row_pointers[y];
                     ptr1 = &(row1[x_img * stride]);
+                    printf(">>> %d\n", __LINE__);
                 }
-
+                printf(">>> %d\n", __LINE__);
                 ptr_res[0] = ptr1[0];
                 ptr_res[1] = ptr1[1];
                 ptr_res[2] = ptr1[2];
                 ptr_res[3] = ptr1[3];
             }
             else {
-                png_bytep row_res = image_res->row_pointers[y];
-                png_bytep ptr_res = &(row_res[x * stride]);
-                png_bytep row1;
-                png_bytep ptr1;
-                if () {
-                    row1 = image->row_pointers[y];
-                    ptr1 = &(row1[x_img * stride]);
-                } else {
-                    row1 = image2->row_pointers[y];
-                    ptr1 = &(row1[x_img * stride]);
-                }
+////                png_bytep color = {255,255,255,255};
+//                png_bytep row_res = image_res->row_pointers[y];
+//                png_bytep ptr_res = &(row_res[x * stride]);
+//                png_bytep row;
+//                png_bytep ptr;
+//                printf(">>> %d\n", __LINE__);
+//                if ((x + y) % 2 == 0) {
+//                    printf(">>> %d\n", __LINE__);
+//                    row = max->row_pointers[y];
+//                    printf(">>> %d\n", __LINE__);
+//                    ptr = &(row[x_img * stride]);
+//                    printf(">>> %d\n", __LINE__);
+//                    ptr_res[0] = ptr[0];
+//                    ptr_res[1] = ptr[1];
+//                    ptr_res[2] = ptr[2];
+//                    ptr_res[3] = ptr[3];
+//                    printf(">>> %d\n", __LINE__);
+//                } else {
+//                    printf(">>> %d\n", __LINE__);
+//                    ptr_res[0] = 255;
+//                    printf(">>> %d\n", __LINE__);
+//                    ptr_res[1] = 255;
+//                    printf(">>> %d\n", __LINE__);
+//                    ptr_res[2] = 255;
+//                    ptr_res[3] = 255;
+//                }
+////                ptr_res[0] = ptr[0];
+////                ptr_res[1] = ptr[1];
+////                ptr_res[2] = ptr[2];
+////                ptr_res[3] = ptr[3];
             }
 
 
@@ -1023,13 +1049,13 @@ int main(int argc, char **argv) {
 //     */
 
 // об
-    struct Png image2;
-    read_png_file(argv[2], &image2);
-    struct Png image_res;
-    read_png_file(argv[2], &image_res);
+//    struct Png image2;
+//    read_png_file(argv[2], &image2);
+//    struct Png image_res;
+//    read_png_file(argv[2], &image_res);
 
     // об по ш
-    merge(&image, &image2, 1, &image_res);
+//    merge(&image, &image2, 1, &image_res);
 
 
 ///*
