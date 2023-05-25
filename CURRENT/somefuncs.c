@@ -501,55 +501,6 @@ void circle(struct Png * image, int X1, int Y1, int R, int t, int * color) {
     }
 }
 
-int lline (struct Png *img, int x00, int y00, int x11, int y11, int color[4], int width)
-{
-    for (int i = 0; i < width; i++){
-        int x0, x1, y0, y1;
-        if (abs(x11 - x00) < abs(y11 - y00)){
-            x0 = x00 + i;
-            x1 = x11 + i;
-            y1 = y11;
-            y0 = y00;
-        } else{
-            x0 = x00;
-            x1 = x11;
-            y1 = y11 + i;
-            y0 = y00 + i;
-        }
-
-        int dx = abs(x1 - x0);
-        int dy = abs(y1 - y0);
-        int sx, sy;
-        if (x0 < x1){
-            sx = 1;
-        } else{
-            sx = -1;
-        }
-        if (y0 < y1){
-            sy = 1;
-        } else{
-            sy = -1;
-        }
-        int err = dx - dy;
-        while (1){
-            png_bytep row = img->row_pointers[y0];
-            png_bytep px = &(row[x0 * 4]);
-            px[0] = color[0];
-            px[1] = color[1];
-            px[2] = color[2];
-            if (x0 == x1 && y0 == y1)
-                break;
-            int e2 = 2 * err;
-            if (e2 > -dy){
-                err -= dy;
-                x0 += sx; }
-            if (e2 < dx){
-                err += dx;
-                y0 += sy; }
-        } }
-    return 0;
-}
-
 void sq_red(struct Png * image, struct Png * image_red, int l) {
     int number_of_channels = 4;
     int bit_depth = image->bit_depth;
@@ -581,40 +532,52 @@ void sq_red(struct Png * image, struct Png * image_red, int l) {
     }
 }
 
-
 void merge(struct Png * image, struct Png * image2, int t, struct Png * image_res) {
 
-////    image_res->width = image->width + image2->width;
+    int w_min, h_min;
+    struct Png * min;
+    struct Png * max;
 //    image_res->width = image2->width;
-//    printf(">>> %d\n", __LINE__);
-////    image_res->height = image_res->height;
-//    if (image->height > image2->height) {
-//        image_res->height = image2->height;
-//    } else {
-//        image_res->height = image->height;
-//    }
-//printf(">>> %d h %d w %d\n", __LINE__, image_res->height,image_res->width );
-////    int min_w
-//
-////    png_read_update_info(image_res->png_ptr, image_res->info_ptr);
-//
-//    // image_res->row_pointers = (png_bytep *) malloc(sizeof(png_bytep) * image_res->height);
-////    for (int y = 0; y < image_res->height; y++)
-////        image_res->row_pointers[y] = (png_byte *) realloc(image_res->row_pointers[y], image_res->width * 4 * sizeof(png_byte)/*png_get_rowbytes(image_res->png_ptr, image_res->info_ptr)*/);
-//
-//
-//
-//    printf(">>> %d\n", __LINE__);
-//    int number_of_channels = 4;
-//    int bit_depth = image->bit_depth;
-//    int stride = number_of_channels * bit_depth / 8;
-//    printf(">>> %d\n", __LINE__);
-//
-//    int x_img = 0;
-//    int x = 0;
-//    for (int y = 0; y < image_res->height; y++) {
-////        printf(">>> %d\n", __LINE__);
-////        printf("X_img %d Y %d X %d\n", x_img, y, x);
+    if (image->width < image2->width) {
+        image_res->width = image2->width;
+        w_min = image->width;
+        min = image;
+        max = image2;
+    } else {
+        image_res->width = image->width;
+        w_min = image2->width;
+        min = image2;
+        max = image;
+    }
+
+//    image_res->height = image_res->height;
+    if (image->height < image2->height) {
+        image_res->height = image2->height;
+        h_min = image->height;
+    } else {
+        image_res->height = image->height;
+        h_min = image2->height;
+    }
+
+
+
+    // image_res->row_pointers = (png_bytep *) malloc(sizeof(png_bytep) * image_res->height);
+//    for (int y = 0; y < image_res->height; y++)
+//        image_res->row_pointers[y] = (png_byte *) realloc(image_res->row_pointers[y], image_res->width * 4 * sizeof(png_byte)/*png_get_rowbytes(image_res->png_ptr, image_res->info_ptr)*/);
+
+
+
+    printf(">>> %d\n", __LINE__);
+    int number_of_channels = 4;
+    int bit_depth = image->bit_depth;
+    int stride = number_of_channels * bit_depth / 8;
+    printf(">>> %d\n", __LINE__);
+
+    int x_img = 0;
+    int x = 0;
+    for (int y = 0; y < image_res->height; y++) {
+//        printf(">>> %d\n", __LINE__);
+//        printf("X_img %d Y %d X %d\n", x_img, y, x);
 //        x_img = 0;
 //        for (x = 0, x_img = 0; x < image2->width; x+=2, x_img++) {
 //            printf("Y %d X %d\n", y, x);
@@ -623,6 +586,7 @@ void merge(struct Png * image, struct Png * image2, int t, struct Png * image_re
 //            png_bytep row2 = image2->row_pointers[y];
 //            png_bytep ptr2 = &(row2[x_img * stride]);
 //            png_bytep row_res = image_res->row_pointers[y];
+//
 //            png_bytep ptr_res1 = &(row_res[x * stride]);
 //            png_bytep ptr_res2 = &(row_res[(x+1) * stride]);
 ////            if (x_img >= min_w) {
@@ -642,108 +606,146 @@ void merge(struct Png * image, struct Png * image2, int t, struct Png * image_re
 ////            }
 //
 //        }
+
+        x_img = 0;
+        for (x = 0, x_img = 0; x < image_res->width; x++, x_img++) {
+
+            if (h_min > y && w_min > x) {
+                png_bytep row_res = image_res->row_pointers[y];
+                png_bytep ptr_res = &(row_res[x * stride]);
+                png_bytep row1;
+                png_bytep ptr1;
+                if ((x + y) % 2 == 0) {
+                    row1 = image->row_pointers[y];
+                    ptr1 = &(row1[x_img * stride]);
+                } else {
+                    row1 = image2->row_pointers[y];
+                    ptr1 = &(row1[x_img * stride]);
+                }
+
+                ptr_res[0] = ptr1[0];
+                ptr_res[1] = ptr1[1];
+                ptr_res[2] = ptr1[2];
+                ptr_res[3] = ptr1[3];
+            }
+            else {
+                png_bytep row_res = image_res->row_pointers[y];
+                png_bytep ptr_res = &(row_res[x * stride]);
+                png_bytep row1;
+                png_bytep ptr1;
+                if () {
+                    row1 = image->row_pointers[y];
+                    ptr1 = &(row1[x_img * stride]);
+                } else {
+                    row1 = image2->row_pointers[y];
+                    ptr1 = &(row1[x_img * stride]);
+                }
+            }
+
+
+        }
+    }
+
+
+//    x_img = 0;
+//    int x_new = 0;
+//    for (int y = 0; y < image_res->height; y++) {
+////        printf(">>> %d\n", __LINE__);
+////        printf("X_img %d Y %d X %d\n", x_img, y, x);
+//        x_img = 0;
+//        for (x_new = image2->width, x_img = 0; x_new < image_res->width; x_new+=2, x_img++) {
+//            printf("Y %d X %d\n", y, x_new);
+//            png_bytep row1 = image->row_pointers[y];
+//            png_bytep ptr1 = &(row1[x_img * stride]);
+//            png_bytep row2 = image2->row_pointers[y];
+//            png_bytep ptr2 = &(row2[x_img * stride]);
+//            png_bytep row_res = image_res->row_pointers[y];
+//            png_bytep ptr_res1 = &(row_res[x_new * stride]);
+//            png_bytep ptr_res2 = &(row_res[(x_new+1) * stride]);
+////            if (x_img >= min_w) {
+////
+////            }
+////            if (!(x % 2)) {
+//            ptr_res1[0] = ptr1[0];
+//            ptr_res1[1] = ptr1[1];
+//            ptr_res1[2] = ptr1[2];
+//            ptr_res1[3] = ptr1[3];
+////            } else if (x % 2) {
+//            ptr_res2[0] = ptr2[0];
+//            ptr_res2[1] = ptr2[1];
+//            ptr_res2[2] = ptr2[2];
+//            ptr_res2[3] = ptr2[3];
+////                x_img++;
+////            }
+//
+//        }
+//    }
+    printf(">>> %d h %d w %d\n", __LINE__, image_res->height,image_res->width );
+
+
+
+
+// !!!! объединение без мержа по ширине
+//    image_res->width = image->width + image2->width;
+//    struct Png * min;
+//    struct Png * max;
+//
+//    if (image->height > image2->height) {
+//        image_res->height = image->height;
+//        min = image2;
+//        max = image;
+//    } else {
+//        image_res->height = image2->height;
+//        min = image;
+//        max = image2;
 //    }
 //
+//    png_bytep * rows = (png_bytep *) malloc(sizeof(png_bytep) * image_res->height);
+//    for (int y = 0; y < image_res->height; y++)
+//        rows[y] = (png_byte *) malloc(image_res->width * 4 * sizeof(png_byte));
+//    image_res->row_pointers = rows;
 //
-////    x_img = 0;
-////    int x_new = 0;
-////    for (int y = 0; y < image_res->height; y++) {
-//////        printf(">>> %d\n", __LINE__);
-//////        printf("X_img %d Y %d X %d\n", x_img, y, x);
-////        x_img = 0;
-////        for (x_new = image2->width, x_img = 0; x_new < image_res->width; x_new+=2, x_img++) {
-////            printf("Y %d X %d\n", y, x_new);
-////            png_bytep row1 = image->row_pointers[y];
-////            png_bytep ptr1 = &(row1[x_img * stride]);
-////            png_bytep row2 = image2->row_pointers[y];
-////            png_bytep ptr2 = &(row2[x_img * stride]);
-////            png_bytep row_res = image_res->row_pointers[y];
-////            png_bytep ptr_res1 = &(row_res[x_new * stride]);
-////            png_bytep ptr_res2 = &(row_res[(x_new+1) * stride]);
-//////            if (x_img >= min_w) {
-//////
-//////            }
-//////            if (!(x % 2)) {
-////            ptr_res1[0] = ptr1[0];
-////            ptr_res1[1] = ptr1[1];
-////            ptr_res1[2] = ptr1[2];
-////            ptr_res1[3] = ptr1[3];
-//////            } else if (x % 2) {
-////            ptr_res2[0] = ptr2[0];
-////            ptr_res2[1] = ptr2[1];
-////            ptr_res2[2] = ptr2[2];
-////            ptr_res2[3] = ptr2[3];
-//////                x_img++;
-//////            }
-////
-////        }
-////    }
-//    printf(">>> %d h %d w %d\n", __LINE__, image_res->height,image_res->width );
-
-
-
-
-// объединение без мержа
-    image_res->width = image->width + image2->width;
-    struct Png * min;
-    struct Png * max;
-
-    if (image->height > image2->height) {
-        image_res->height = image->height;
-        min = image2;
-        max = image;
-    } else {
-        image_res->height = image2->height;
-        min = image;
-        max = image2;
-    }
-
-    png_bytep * rows = (png_bytep *) malloc(sizeof(png_bytep) * image_res->height);
-    for (int y = 0; y < image_res->height; y++)
-        rows[y] = (png_byte *) malloc(image_res->width * 4 * sizeof(png_byte));
-    image_res->row_pointers = rows;
-
-    for (int y = 0; y < max->height; y++) {
-        for (int x = 0; x < max->width; x++) {
-            png_bytep row_max = max->row_pointers[y];
-            png_bytep ptr_max = &(row_max[x * 4]);
-            png_bytep row_res = image_res->row_pointers[y];
-            png_bytep ptr_res = &(row_res[x * 4]);
-
-            ptr_res[0] = ptr_max[0];
-            ptr_res[1] = ptr_max[1];
-            ptr_res[2] = ptr_max[2];
-            ptr_res[3] = ptr_max[3];
-        }
-    }
-
-    for (int y = 0; y < min->height; y++) {
-        for (int x = max->width, x_min = 0; x < image_res->width; x++, x_min++) {
-            png_bytep row_min = min->row_pointers[y];
-            png_bytep ptr_min = &(row_min[x_min * 4]);
-            png_bytep row_res = image_res->row_pointers[y];
-            png_bytep ptr_res = &(row_res[x * 4]);
-
-            ptr_res[0] = ptr_min[0];
-            ptr_res[1] = ptr_min[1];
-            ptr_res[2] = ptr_min[2];
-            ptr_res[3] = ptr_min[3];
-        }
-    }
-
-    for (int y = min->height; y < image_res->height; y++) {
-        for (int x = max->width; x < image_res->width; x++) {
-//            png_bytep row_min = max->row_pointers[y];
-//            png_bytep ptr_min = &(row_min[x * 4]);
-            png_bytep row_res = image_res->row_pointers[y];
-            png_bytep ptr_res = &(row_res[x * 4]);
-
-            ptr_res[0] = 0;
-            ptr_res[1] = 0;
-            ptr_res[2] = 0;
-            ptr_res[3] = 255;
-        }
-    }
+//    for (int y = 0; y < max->height; y++) {
+//        for (int x = 0; x < max->width; x++) {
+//            png_bytep row_max = max->row_pointers[y];
+//            png_bytep ptr_max = &(row_max[x * 4]);
+//            png_bytep row_res = image_res->row_pointers[y];
+//            png_bytep ptr_res = &(row_res[x * 4]);
+//
+//            ptr_res[0] = ptr_max[0];
+//            ptr_res[1] = ptr_max[1];
+//            ptr_res[2] = ptr_max[2];
+//            ptr_res[3] = ptr_max[3];
+//        }
+//    }
+//
+//    for (int y = 0; y < min->height; y++) {
+//        for (int x = max->width, x_min = 0; x < image_res->width; x++, x_min++) {
+//            png_bytep row_min = min->row_pointers[y];
+//            png_bytep ptr_min = &(row_min[x_min * 4]);
+//            png_bytep row_res = image_res->row_pointers[y];
+//            png_bytep ptr_res = &(row_res[x * 4]);
+//
+//            ptr_res[0] = ptr_min[0];
+//            ptr_res[1] = ptr_min[1];
+//            ptr_res[2] = ptr_min[2];
+//            ptr_res[3] = ptr_min[3];
+//        }
+//    }
+//
+//    for (int y = min->height; y < image_res->height; y++) {
+//        for (int x = max->width; x < image_res->width; x++) {
+////            png_bytep row_min = max->row_pointers[y];
+////            png_bytep ptr_min = &(row_min[x * 4]);
+//            png_bytep row_res = image_res->row_pointers[y];
+//            png_bytep ptr_res = &(row_res[x * 4]);
+//
+//            ptr_res[0] = 0;
+//            ptr_res[1] = 0;
+//            ptr_res[2] = 0;
+//            ptr_res[3] = 255;
+//        }
+//    }
 
 
 
@@ -963,6 +965,26 @@ void most_area(struct Png * image, int x1, int y1, int x2, int y2){
     }
 }
 
+void new_image(char * file_name, int height, int width) {
+    struct Png image;
+    image.width = width;
+    image.height = height;
+    image.color_type = PNG_COLOR_TYPE_RGB_ALPHA;
+    image.bit_depth = 8;
+    image.row_pointers = (png_bytep*) malloc(height * sizeof(png_bytep));
+    for (int y = 0; y < height; y++) {
+        image.row_pointers[y] = (png_bytep) malloc(png_get_rowbytes(image.png_ptr, image.info_ptr));
+        memset(image.row_pointers[y], 255, width*4);
+    }
+    write_png_file(file_name, &image);
+    printf(">>> %d\n", __LINE__);
+//    for (int y = 0; y < height; y++) {
+//        free(image.row_pointers[y]);
+//    }
+//    free(image.row_pointers);
+}
+
+
 int main(int argc, char **argv) {
     if(argc == 1 || argc == 2){
         print_help();
@@ -971,12 +993,15 @@ int main(int argc, char **argv) {
     struct Png image;
     read_png_file(argv[1], &image);
 
-// замостить
-    struct Png copy;
-    read_png_file(argv[1], &copy);
+    // new
+//    char name[] = "new_file.png";
+//    new_image(name, 300, 500);
 
+// замостить
+//    struct Png copy;
+//    read_png_file(argv[1], &copy);
     // з и
-    most_area(&image, 200, 200, 550, 550);
+//    most_area(&image, 200, 200, 550, 550);
 
     // б о
 //    struct Png copy;
@@ -998,13 +1023,13 @@ int main(int argc, char **argv) {
 //     */
 
 // об
-//    struct Png image2;
-//    read_png_file(argv[2], &image2);
-//    struct Png image_res;
-//    read_png_file(argv[2], &image_res);
+    struct Png image2;
+    read_png_file(argv[2], &image2);
+    struct Png image_res;
+    read_png_file(argv[2], &image_res);
 
     // об по ш
-//    merge(&image, &image2, 1, &image_res);
+    merge(&image, &image2, 1, &image_res);
 
 
 ///*
@@ -1025,8 +1050,8 @@ int main(int argc, char **argv) {
     strcpy(new_file_name, argv[argc-1]);
 // не трогать --
 
-    write_png_file(new_file_name, &image);
-//    write_png_file(new_file_name, &image_red);
+//    write_png_file(new_file_name, &image);
+    write_png_file(new_file_name, &image_res);
 // б о и р
 //    write_png_file(new_file_name, &copy);
 
