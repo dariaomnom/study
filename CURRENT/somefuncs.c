@@ -807,6 +807,44 @@ struct Png merge_center(struct Png * image1, struct Png * image2) {
     return max;
 }
 
+struct Png merge_white(struct Png * image1, struct Png * image2) {
+    struct Png max, min;
+    if (image1->height > image2->height) {
+        max = *image1;
+        min = *image2;
+    } else {
+        max = *image2;
+        min = *image1;
+    }
+    int w1 = max.width; int h1 = max.height;
+    int w2 = min.width; int h2 = min.height;
+    int x_min = 0; int y_min = 0;
+    for (int y = 0; y < max.height; y++, y_min++) {
+        x_min = 0;
+        for (int x = 0; x < max.width; x++, x_min++) {
+            png_bytep row_max = max.row_pointers[y];
+            png_bytep ptr_max = &(row_max[x * 4]);
+            if (!((x+y) % 2)) {
+                if (y_min >= min.height) {
+                    ptr_max[0] = 255; ptr_max[1] = 255; ptr_max[2] = 255; ptr_max[3] = 255;
+                    continue;
+                }
+                if (x_min >= min.width) {
+                    ptr_max[0] = 255; ptr_max[1] = 255; ptr_max[2] = 255; ptr_max[3] = 255;
+                    continue;
+                }
+                png_bytep row_min = min.row_pointers[y_min];
+                png_bytep ptr_min = &(row_min[x_min * 4]);
+                ptr_max[0] = ptr_min[0];
+                ptr_max[1] = ptr_min[1];
+                ptr_max[2] = ptr_min[2];
+                ptr_max[3] = ptr_min[3];
+            }
+        }
+    }
+    return max;
+}
+
 //struct Png *  Union(struct Png *  img1, struct Png *  img2,int* color){
 //    struct Png * copy = malloc(sizeof(struct Png));
 //    copy->path = img1->path;
@@ -1085,7 +1123,8 @@ int main(int argc, char **argv) {
 
     // об по ш
 //    merge(&image, &image2, 1, &image_res);
-    struct Png res = merge_center(&image, &image2);
+//    struct Png res = merge_center(&image, &image2);
+    struct Png res2 = merge_white(&image, &image2);
 
 ///*
 //    struct Png image_red;
@@ -1109,7 +1148,7 @@ int main(int argc, char **argv) {
 //    write_png_file(new_file_name, &image_res);
 // б о и р
 //    write_png_file(new_file_name, &copy);
-    write_png_file(new_file_name, &res);
+    write_png_file(new_file_name, &res2);
 
 
 
