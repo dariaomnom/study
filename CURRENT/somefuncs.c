@@ -777,6 +777,36 @@ void merge(struct Png * image, struct Png * image2, int t, struct Png * image_re
 
 }
 
+struct Png merge_center(struct Png * image1, struct Png * image2) {
+    struct Png max, min;
+    if (image1->height > image2->height) {
+        max = *image1;
+        min = *image2;
+    } else {
+        max = *image2;
+        min = *image1;
+    }
+    int w1 = max.width; int h1 = max.height;
+    int w2 = min.width; int h2 = min.height;
+    int x_max = w1/2 - w2/2; int y_max = h1/2 - h2/2;
+    for (int y = 0; y < min.height; y++, y_max++) {
+        x_max = w1/2 - w2/2;
+        for (int x = 0; x < min.width; x++, x_max++) {
+            png_bytep row_max = max.row_pointers[y_max];
+            png_bytep ptr_max = &(row_max[x_max * 4]);
+            if (!((x+y) % 2)) {
+                png_bytep row_min = min.row_pointers[y];
+                png_bytep ptr_min = &(row_min[x * 4]);
+                ptr_max[0] = ptr_min[0];
+                ptr_max[1] = ptr_min[1];
+                ptr_max[2] = ptr_min[2];
+                ptr_max[3] = ptr_min[3];
+            }
+        }
+    }
+    return max;
+}
+
 //struct Png *  Union(struct Png *  img1, struct Png *  img2,int* color){
 //    struct Png * copy = malloc(sizeof(struct Png));
 //    copy->path = img1->path;
@@ -1003,7 +1033,6 @@ void new_image(char * file_name, int height, int width) {
         memset(image.row_pointers[y], 255, width*4);
     }
     write_png_file(file_name, &image);
-    printf(">>> %d\n", __LINE__);
 //    for (int y = 0; y < height; y++) {
 //        free(image.row_pointers[y]);
 //    }
@@ -1020,10 +1049,10 @@ int main(int argc, char **argv) {
     read_png_file(argv[1], &image);
 
     // new
-//    char name[] = "new_file.png";
-//    new_image(name, 300, 500);
+//    char name[] = "new_file2.png";
+//    new_image(name, 500, 500);
 
-// замостить
+// з
 //    struct Png copy;
 //    read_png_file(argv[1], &copy);
     // з и
@@ -1049,14 +1078,14 @@ int main(int argc, char **argv) {
 //     */
 
 // об
-//    struct Png image2;
-//    read_png_file(argv[2], &image2);
+    struct Png image2;
+    read_png_file(argv[2], &image2);
 //    struct Png image_res;
 //    read_png_file(argv[2], &image_res);
 
     // об по ш
 //    merge(&image, &image2, 1, &image_res);
-
+    struct Png res = merge_center(&image, &image2);
 
 ///*
 //    struct Png image_red;
@@ -1077,9 +1106,10 @@ int main(int argc, char **argv) {
 // не трогать --
 
 //    write_png_file(new_file_name, &image);
-    write_png_file(new_file_name, &image_res);
+//    write_png_file(new_file_name, &image_res);
 // б о и р
 //    write_png_file(new_file_name, &copy);
+    write_png_file(new_file_name, &res);
 
 
 
